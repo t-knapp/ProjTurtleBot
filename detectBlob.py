@@ -18,7 +18,8 @@ class DetectBlob(object):
     self.params.maxConvexity = 1
 
   def identifyColor(self, img):
-    img_blur = cv2.GaussianBlur(img,(5,5),0)
+    img_blur = img
+#    img_blur = cv2.GaussianBlur(img,(5,5),0)
     img_blur = cv2.medianBlur(img_blur, 5)
     img_hsv = cv2.cvtColor(img_blur,cv2.COLOR_BGR2HSV)
     # rospy.loginfo(img_hsv[320][240])
