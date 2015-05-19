@@ -39,4 +39,9 @@
 - Distanz zum Ball (optional)
 	- Geschwindigkeit anpassen?
 
+## Vorliegende Daten
+- Bmall liegt links oder Rechts vom Roboter (im sichtfeld)
+- Distanz zum Ball
+
 		
+## 
