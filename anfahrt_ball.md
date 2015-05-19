@@ -11,7 +11,7 @@
 - _Steht Roboter __vor__ oder __hinter__ dem Ball_
 
 		^y
-		|	   ENEMY-GOAL			* Bällpositionen
+		|	   ENEMY-GOAL			* Bällpositionen / Fälle
 		|	_____:::::_____			
 		|	|*         * *|
 		|	|             |
@@ -29,11 +29,14 @@
 		
 ## Benötigte Daten
 
+- Ballposition x,y
+	- 	zur Fallentscheidung, wie liegt der Ball
+- Roboter Position x,y
+- 	- zur Fallentscheidung wie fhare ich zum Ball
 - Robot Orientierung, zu Bande Gegner-Tor, Eigenes-Tor gerichtet.
 	- Grad zum Gegner Tor
-- Roboter Position x,y
-- Ballposition x,y
-- Distanz (optional)
+	- zur Fallentscheidung wie fhare ich zum Ball
+- Distanz zum Ball (optional)
 	- Geschwindigkeit anpassen?
-	 
+
 		
