@@ -60,8 +60,15 @@ def guiThread(colorCallback):
     gui.createScale(groupMax, "S", gui.toSvar, 0, 255)
     gui.createScale(groupMax, "V", gui.toVvar, 0, 255)
 
+    # List
+    gui.initList()
+    gui.loadList()
+
     # Start mainloop (blocking!)
     gui.mainloop()
+
+    # Write list as JSON
+    gui.saveList()
 
 if __name__ == '__main__':
     nbd = NodeBallDetection();
