@@ -1,26 +1,75 @@
-import rospy
-from std_msgs.msg import Bool
-from std_msgs.msg import String
+#import rospy
+#from std_msgs.msg import Bool
+#from std_msgs.msg import String
 import numpy as np
+
+from messages.BallDetectionMessage import BallDetectionMessage
+from messages.DirectionMessage import DirectionMessage
 
 
 class NodeBallJourney(object):
+
     def __init__(self, name="NodeBallJourney"):
-    rospy.init_node(name, anonymous=False)
-    rospy.loginfo("Stop detection by pressing CTRL + C")
 
-    rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
-    rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.positionCallback, queue_size = 1)
+        #rospy.init_node(name, anonymous=False)
+        #rospy.loginfo("Stop detection by pressing CTRL + C")
 
-    self.run = False
-    while(True):
-        while(self.run):
-            # do stuff
+        #rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
+        #rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.positionCallback, queue_size = 1)
+        self.goalPosition = 0
+        self.heading = 0
+        self.ballMessage = BallDetectionMessage(0,0,100)
+
+        self.run = True
+        while(True):
+            while(self.run):
+                if self.ballMessage.distance > 10: # TODO: Wert anpassen
+                    # Bei Mindestabstand zum Ball -> anfahrt
+                    if self.correctHeading():
+                        # Ball Tor und Roboter stehen in Richtiger Konstelation zusammen
+                        linar_speed = 0.1
+                        angular_speed = self.calculateAngularSpeed()
+                    else:
+                        # Der Ball von der anderen seite angefahren werden
+                        linar_speed = 0.125
+                        angular_speed = self.calculateAngularSpeed(80,100)
+                else:
+                    linar_speed = 0.0
+                    angular_speed = self.calculateAngularSpeed()
 
 
 
+
+
+    # CALLBACKS
     def runCallback(self, data):
         self.run = data
 
+    def directionCallback(self, data):
+        message = DirectionMessage.fromJSONString(data)
+        if(message.type == DirectionMessage.GOAL_DIRECTION):
+            self.goalPosition = message.degrees
+        if(message.type == DirectionMessage.SELF_DIRECTION):
+            self.heading == message.degrees
 
-    def s
+    def detectionCallBack(self, data):
+        self.ballMessage = BallDetectionMessage.fromJSONString(data)
+
+    def correctHeading(self):
+        return range(((self.heading -90) % 360),((self.heading +90) % 360))
+
+    def calculateAngularSpeed(self, leftBorder=40, rightBorder=60, maxAngularSpeed = 0.33):
+
+        if leftBorder >= self.ballMessage.x <= rightBorder:
+            return 0.0
+        if leftBorder > self.ballMessage.x:
+            return maxAngularSpeed-self.ballMessage.x*(maxAngularSpeed/leftBorder)
+        if rightBorder < self.ballMessage.x:
+            a = (maxAngularSpeed/(100 - rightBorder))
+            b = a* 100 - maxAngularSpeed
+            return self.ballMessage.x * a - b
+
+
+
+if __name__ == '__main__':
+    NodeBallJourney()
