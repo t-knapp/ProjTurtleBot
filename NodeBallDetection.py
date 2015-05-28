@@ -1,37 +1,51 @@
-#import rospy
+import rospy
 import numpy as np
 import cv2
-#import message_filters
+import message_filters
 from detectBlob import DetectBlob
-#from geometry_msgs.msg import Twist
-#from sensor_msgs.msg import Image
-#from cv_bridge import CvBridge
-#import math
+from geometry_msgs.msg import Twist
+from sensor_msgs.msg import Image
+from cv_bridge import CvBridge
+import math
+import sys
 
-#from kobuki_msgs.msg import ButtonEvent
+from kobuki_msgs.msg import ButtonEvent
 
 from HSVGui import HSVGui
 from threading import Thread
 
+#counter = 0
+
 class NodeBallDetection(object):
+  #counter = 1
   def __init__(self, name="NodeBallDetection"):
-    #rospy.init_node(name, anonymous=False)
-    #rospy.loginfo("Stop detection by pressing CTRL + C")
+    rospy.init_node(name, anonymous=False)
+    rospy.loginfo("Stop detection by pressing CTRL + C")
 
     self.detectBlob = DetectBlob()
     
-    #self.cv_bridge = CvBridge()
+    self.cv_bridge = CvBridge()
 
     cv2.namedWindow("image_view", 1)
     cv2.startWindowThread()
 
-    #rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
-    #rospy.Subscriber("/mobile_base/events/button", ButtonEvent, self.buttonListener)
+    rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
+    rospy.Subscriber("/mobile_base/events/button", ButtonEvent, self.buttonListener)
+
+    # proceed every n-th frame from cmdline
+    self.counter = 1
+    self.nthframe = int(sys.argv[1])
 
   def buttonListener(self, data):
       print("buttonListener")
 
   def processImages(self, ros_img):
+    if(self.nthframe != 0):
+        #print(NodeBallDetection.counter, self.nthframe)
+        if(self.counter % self.nthframe != 0):
+            self.counter = self.counter + 1
+            return
+   
     img = self.cv_bridge.imgmsg_to_cv2(ros_img, "bgr8")
     keypoints = self.detectBlob.getBlobs(img)
     for item in keypoints :
@@ -43,6 +57,8 @@ class NodeBallDetection(object):
     #cv2.imshow('frame',img)
     cv2.imshow("image_view", img)
     #cv2.imwrite('ball.png',img)
+    
+    self.counter = 1
 
 def guiThread(colorCallback):
     # Create GUI
@@ -70,6 +86,9 @@ def guiThread(colorCallback):
     # Write list as JSON
     gui.saveList()
 
+    # Close all opencv windows
+    cv2.destroyAllWindows()
+
 if __name__ == '__main__':
     nbd = NodeBallDetection();
     
@@ -77,4 +96,4 @@ if __name__ == '__main__':
     thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, ))
     thread.start()
     
-    #rospy.spin()
+    rospy.spin()

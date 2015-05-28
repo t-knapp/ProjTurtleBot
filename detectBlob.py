@@ -17,6 +17,9 @@ class DetectBlob(object):
     self.params.minConvexity = 0
     self.params.maxConvexity = 1
 
+    cv2.namedWindow("img_inrange", 1)
+    cv2.startWindowThread()
+
   # Callback for color adjusting, used by gui
   def setColors(self, minColor, maxColor):
       #print("DetectBlob.setColors      ", minColor, maxColor)
@@ -51,7 +54,7 @@ class DetectBlob(object):
     keypoints = detector.detect(binary)
 
     keypoints.sort(self.compKeypoint)
-    keypoints = self.throwOutSmallBlobs(keypoints, 30)
+    keypoints = self.throwOutSmallBlobs(keypoints, 15) #30
     
     im_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite("/tmp/img/key_"+str(DetectBlob.i)+".jpg", im_with_keypoints)
