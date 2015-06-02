@@ -20,14 +20,23 @@ class DetectBlob(object):
     self.params = cv2.SimpleBlobDetector_Params()
     self.params.filterByColor = False
     self.params.filterByInertia = False
+<<<<<<< HEAD
     self.params.minInertiaRatio = 0
     self.params.maxInertiaRatio = 1
     self.params.filterByCircularity = False
     self.params.minCircularity = 0
     self.params.maxCircularity = 1
+=======
+    
+    self.params.filterByCircularity = False
+    self.params.minCircularity = 0.8
+    self.params.maxCircularity = 1
+
+>>>>>>> 89ff9296bb64e8769c63822aae7dcff4b91873e3
     self.params.filterByArea = False
+
     self.params.filterByConvexity = True
-    self.params.minConvexity = 0
+    self.params.minConvexity = 0.5
     self.params.maxConvexity = 1
 
     cv2.namedWindow("img_inrange", 1)
@@ -75,11 +84,12 @@ class DetectBlob(object):
     # rospy.loginfo(img_hsv[320][240])
     
     img_inrange = cv2.inRange(img_hsv, self.minColor, self.maxColor)
-    cv2.imshow("img_inrange", img_inrange)
+    #cv2.imshow("img_inrange", img_inrange)
     
     # cv2.imwrite("/tmp/img/hsv_in_range_" + str(DetectBlob.i) + ".jpg", img_inrange)
     img_erode = cv2.erode(img_inrange, None, iterations = 3)
     img_dilate = cv2.dilate(img_erode, None, iterations = 10)
+    cv2.imshow("img_inrange", img_dilate)
     # cv2.imwrite("/tmp/img/hsv_dilate"+str(DetectBlob.i)+".jpg", img_dilate)
     DetectBlob.i += 1
     # cv2.imshow('detect ball', img_dilate)
