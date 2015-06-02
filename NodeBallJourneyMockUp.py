@@ -19,8 +19,8 @@ class NodeBallJourneyMockUp(object):
 
     # CALLBACKS
     def detectionCallBack(self, data):
-        print data
-        #print BallDetectionMessage.fromJSONString(data)
+        #print data
+        print BallDetectionMessage.fromJSONString(data.data)
 
 if __name__ == '__main__':
     NodeBallJourneyMockUp()

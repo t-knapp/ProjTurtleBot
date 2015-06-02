@@ -111,24 +111,36 @@ class NodeBallDetection(object):
     
     self.counter = 1
 
-def guiThread(colorCallback):
+def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback);
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback);
 
     # Group min
-    groupMin = gui.createLabelFrame("HSV Min-Value");
+    groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);
     gui.createScale(groupMin, "H", gui.fromHvar, 0, 180)
     gui.createScale(groupMin, "S", gui.fromSvar, 0, 255)
     gui.createScale(groupMin, "V", gui.fromVvar, 0, 255)
 
     # Group max
-    groupMax = gui.createLabelFrame("HSV Max-Value");
+    groupMax = gui.createLabelFrame("HSV Max-Value", 1, 0);
     gui.createScale(groupMax, "H", gui.toHvar, 0, 180)
     gui.createScale(groupMax, "S", gui.toSvar, 0, 255)
     gui.createScale(groupMax, "V", gui.toVvar, 0, 255)
 
+    ''' Filter '''    
+    groupShapeFilters = gui.createScrollableLabelFrame("Shape-Filters", 0, 1)
+    gui.createShapeFilterOption(groupShapeFilters, "Activate Circularity", gui.cbCircularityVar, "Min.", gui.scCircularityMinVar, 0, 1, "Max.", gui.scCircularityMaxVar, 0, 1)
+    gui.createShapeFilterOption(groupShapeFilters, "Activate Inertia", gui.cbInertiaVar, "Min.", gui.scInertiaMinVar, 0, 1, "Max.", gui.scInertiaMaxVar, 0, 1)
+    gui.createShapeFilterOption(groupShapeFilters, "Activate Convexity", gui.cbConvexityVar, "Min.", gui.scConvexityMinVar, 0, 1, "Max.", gui.scConvexityMaxVar, 0, 1)
+        
+    groupBlur = gui.createLabelFrame("Blur-Filter", 1, 1);    
+    gui.createSingleRadioBtn(groupBlur, "None", gui.rbBlurVar, 1)
+    gui.createSingleRadioBtn(groupBlur, "Activate GaussianBlur", gui.rbBlurVar, 2)  
+    gui.createSingleRadioBtn(groupBlur, "Activate MedianBlur", gui.rbBlurVar, 3)  
+    
+
     # List
-    gui.initList()
+    gui.initList("Speichern/Laden", 2, 0)
     gui.loadList()
 
     # Start mainloop (blocking!)
@@ -144,7 +156,7 @@ if __name__ == '__main__':
     nbd = NodeBallDetection();
     
     # GUI in separate thread
-    thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, ))
+    thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, ))
     thread.start()
     
     rospy.spin()
