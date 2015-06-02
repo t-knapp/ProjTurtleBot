@@ -9,7 +9,7 @@ from cv_bridge import CvBridge
 import math
 import sys
 
-#from kobuki_msgs.msg import ButtonEvent
+from kobuki_msgs.msg import ButtonEvent
 
 from HSVGui import HSVGui
 from threading import Thread

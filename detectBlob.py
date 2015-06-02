@@ -92,7 +92,7 @@ class DetectBlob(object):
     elif(self.filterBlur == 2):
       return cv2.GaussianBlur(img,(5,5),0)
     else:
-      return cv2.medianBlur(img_blur, 5)
+      return cv2.medianBlur(img, 5)
 
   def getBlobs(self, img):
     binary = self.identifyColor(img)
