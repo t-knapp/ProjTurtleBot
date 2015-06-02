@@ -1,1 +1,1 @@
-{"last": {"max": [180, 254, 255], "min": [0, 135, 0]}, "list": [{"max": [6, 255, 255], "name": "default", "min": [4, 133, 91]}, {"max": [180, 254, 255], "name": "1-306 Nachmittag", "min": [0, 135, 0]}]}
+{"last": {"max": [180, 254, 255], "min": [28, 135, 129]}, "list": [{"max": [6, 255, 255], "name": "default", "min": [4, 133, 91]}, {"max": [180, 254, 255], "name": "1-306 Nachmittag", "min": [0, 135, 0]}, {"max": [180, 254, 255], "name": "Tobi-Zuhause-Mittag", "min": [28, 135, 177]}, {"max": [180, 254, 255], "name": "Tobi-Zuhause-Abend-Bel", "min": [28, 135, 129]}]}

@@ -14,10 +14,10 @@ from kobuki_msgs.msg import ButtonEvent
 from HSVGui import HSVGui
 from threading import Thread
 
-#counter = 0
+from messages.BallDetectionMessage import BallDetectionMessage
+from std_msgs.msg import String
 
 class NodeBallDetection(object):
-  #counter = 1
   def __init__(self, name="NodeBallDetection"):
     rospy.init_node(name, anonymous=False)
     rospy.loginfo("Stop detection by pressing CTRL + C")
@@ -27,17 +27,50 @@ class NodeBallDetection(object):
     self.cv_bridge = CvBridge()
 
     cv2.namedWindow("image_view", 1)
+    #cv2.startWindowThread()
+
+    cv2.namedWindow("depth", 1)
     cv2.startWindowThread()
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
-    rospy.Subscriber("/mobile_base/events/button", ButtonEvent, self.buttonListener)
+    rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
+    #rospy.Subscriber("/mobile_base/events/button", ButtonEvent, self.buttonListener)
+    #rospy.Subscriber("/camera/depth/image", Image, self.processDepthImage, queue_size=1)
+
+    # Publisher for BallDetection
+    self.msgBall = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size=1)
 
     # proceed every n-th frame from cmdline
     self.counter = 1
     self.nthframe = int(sys.argv[1])
 
+    self.depthCounter = 1
+
   def buttonListener(self, data):
       print("buttonListener")
+
+  def processDepthImage(self, depth):
+    if(self.nthframe !=0 and (self.depthCounter % self.nthframe != 0)):
+        self.depthCounter = self.depthCounter + 1
+        return
+    
+    # Draw image 'as it is'
+    depth = self.cv_bridge.imgmsg_to_cv2(depth, "passthrough")
+    cv2.imshow("depth", depth)
+    
+
+    self.depthCounter = self.depthCounter + 1
+
+
+    # print ("processdepthimage")
+
+    #methodList = [method for method in dir(depth) if callable(getattr(depth, method))]
+    #for m in methodList:
+    #  print(m)
+
+    
+
+    self.depthImage = depth
 
   def processImages(self, ros_img):
     if(self.nthframe != 0):
@@ -48,15 +81,33 @@ class NodeBallDetection(object):
    
     img = self.cv_bridge.imgmsg_to_cv2(ros_img, "bgr8")
     keypoints = self.detectBlob.getBlobs(img)
+   
+    msgBallDetection = BallDetectionMessage()
+ 
+    #TODO: Find best one?
     for item in keypoints :
     #    print("\tx %d , y %d, d: %d" % (item.pt[0],item.pt[1], item.size))
         cv2.circle(img, (int(item.pt[0]),int(item.pt[1])), int(item.size), (0,255,100),5)
-    #print("")
+        #print(self.depthImage.at((int(item.pt[0]),int(item.pt[1]))))
+        #pos = int(item.pt[0]) * int(item.pt[1])
+        try:
+            depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
+            print depth
+
+            msgBallDetection.y = int(item.pt[0])
+            msgBallDetection.x = int(item.pt[1])
+            msgBallDetection.distance = depth.astype(int)
+            msgBallDetection.ballDetected = True
+
+            # Publish BallDetectionMessage
+            self.msgBall.publish(String(msgBallDetection.toJSONString()))
+
+        except IndexError:
+            print "IndexError"
 
     # Display the resulting frame
     #cv2.imshow('frame',img)
     cv2.imshow("image_view", img)
-    #cv2.imwrite('ball.png',img)
     
     self.counter = 1
 
