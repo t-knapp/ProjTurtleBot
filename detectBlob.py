@@ -14,25 +14,21 @@ class DetectBlob(object):
     inertiaOpt = FilterOption("inertia")
     convexityOpt = FilterOption("convexity")
     self.filterShape = [circularityOpt, inertiaOpt, convexityOpt]
-    ''' Blur-Filter '''        
+
+    ''' Blur-Filter '''
     self.filterBlur = 1       
 
     self.params = cv2.SimpleBlobDetector_Params()
     self.params.filterByColor = False
     self.params.filterByInertia = False
-<<<<<<< HEAD
+    
     self.params.minInertiaRatio = 0
     self.params.maxInertiaRatio = 1
-    self.params.filterByCircularity = False
-    self.params.minCircularity = 0
-    self.params.maxCircularity = 1
-=======
     
     self.params.filterByCircularity = False
     self.params.minCircularity = 0.8
     self.params.maxCircularity = 1
 
->>>>>>> 89ff9296bb64e8769c63822aae7dcff4b91873e3
     self.params.filterByArea = False
 
     self.params.filterByConvexity = True
