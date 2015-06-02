@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import numpy as np
+from FilterOption import *
 import cv2
 
 class DetectBlob(object):
@@ -7,11 +8,23 @@ class DetectBlob(object):
   def __init__(self):
     self.minColor = np.array([0, 0, 0], np.uint8)
     self.maxColor = np.array([0, 0, 0], np.uint8)
+    
+    ''' Shape-Filter '''
+    circularityOpt = FilterOption("circularity")
+    inertiaOpt = FilterOption("inertia")
+    convexityOpt = FilterOption("convexity")
+    self.filterShape = [circularityOpt, inertiaOpt, convexityOpt]
+    ''' Blur-Filter '''        
+    self.filterBlur = 1       
 
     self.params = cv2.SimpleBlobDetector_Params()
     self.params.filterByColor = False
     self.params.filterByInertia = False
+    self.params.minInertiaRatio = 0
+    self.params.maxInertiaRatio = 1
     self.params.filterByCircularity = False
+    self.params.minCircularity = 0
+    self.params.maxCircularity = 1
     self.params.filterByArea = False
     self.params.filterByConvexity = True
     self.params.minConvexity = 0
@@ -27,10 +40,37 @@ class DetectBlob(object):
       self.maxColor = maxColor
       print("DetectBlob.setColors(self)", self.minColor, self.maxColor)
 
+  def setFilterShape(self, filterShapeAry):
+      self.filterShape = filterShapeAry
+      
+      ''' Filter Circularity '''
+      self.params.filterByCircularity = (self.filterShape[0].activated == 1)
+      self.params.minCircularity = self.filterShape[0].minimum
+      self.params.maxCircularity = self.filterShape[0].maximum
+      
+      ''' Filter Inertia '''
+      self.params.filterByInertia = (self.filterShape[1].activated == 1)
+      self.params.minInertiaRatio = self.filterShape[1].minimum
+      self.params.maxInertiaRatio = self.filterShape[1].maximum
+      
+      ''' Filter Convexity '''
+      self.params.filterByConvexity = (self.filterShape[2].activated == 1)
+      self.params.minConvexity = self.filterShape[2].minimum
+      self.params.maxConvexity = self.filterShape[2].maximum
+      
+      print("DetectBlob.setFilterShape(self)", " self.params.filterByCircularity: ", self.params.filterByCircularity, 
+	    " self.params.filterByInertia: ", self.params.filterByInertia, " self.params.filterByConvexity: ", self.params.filterByConvexity)
+    
+  def setFilterBlur(self, filterNo):
+      self.filterBlur = filterNo
+      print("DetectBlob.setFilterBlur(self)", self.filterBlur)
+      
+
   def identifyColor(self, img):
     img_blur = img
-#    img_blur = cv2.GaussianBlur(img,(5,5),0)
-    img_blur = cv2.medianBlur(img_blur, 5)
+    img_blur = self.doBlurFiltering(img)
+    #img_blur = cv2.GaussianBlur(img,(5,5),0)
+    #img_blur = cv2.medianBlur(img_blur, 5)
     img_hsv = cv2.cvtColor(img_blur,cv2.COLOR_BGR2HSV)
     # rospy.loginfo(img_hsv[320][240])
     
@@ -45,6 +85,14 @@ class DetectBlob(object):
     # cv2.imshow('detect ball', img_dilate)
 
     return img_dilate
+  
+  def doBlurFiltering(self, img):
+    if(self.filterBlur == 1):
+      return img
+    elif(self.filterBlur == 2):
+      return cv2.GaussianBlur(img,(5,5),0)
+    else:
+      return cv2.medianBlur(img_blur, 5)
 
   def getBlobs(self, img):
     binary = self.identifyColor(img)
