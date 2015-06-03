@@ -43,7 +43,7 @@ class DetectBlob(object):
       #print("DetectBlob.setColors      ", minColor, maxColor)
       self.minColor = minColor
       self.maxColor = maxColor
-      print("DetectBlob.setColors(self)", self.minColor, self.maxColor)
+      #print("DetectBlob.setColors(self)", self.minColor, self.maxColor)
 
   def setFilterShape(self, filterShapeAry):
       self.filterShape = filterShapeAry
@@ -63,12 +63,12 @@ class DetectBlob(object):
       self.params.minConvexity = self.filterShape[2].minimum
       self.params.maxConvexity = self.filterShape[2].maximum
       
-      print("DetectBlob.setFilterShape(self)", " self.params.filterByCircularity: ", self.params.filterByCircularity, 
-	    " self.params.filterByInertia: ", self.params.filterByInertia, " self.params.filterByConvexity: ", self.params.filterByConvexity)
+      #print("DetectBlob.setFilterShape(self)", " self.params.filterByCircularity: ", self.params.filterByCircularity, 
+	  #  " self.params.filterByInertia: ", self.params.filterByInertia, " self.params.filterByConvexity: ", self.params.filterByConvexity)
     
   def setFilterBlur(self, filterNo):
       self.filterBlur = filterNo
-      print("DetectBlob.setFilterBlur(self)", self.filterBlur)
+      #print("DetectBlob.setFilterBlur(self)", self.filterBlur)
       
 
   def identifyColor(self, img):

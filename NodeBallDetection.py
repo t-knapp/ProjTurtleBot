@@ -7,7 +7,8 @@ from geometry_msgs.msg import Twist
 from sensor_msgs.msg import Image
 from cv_bridge import CvBridge
 import math
-import sys
+
+import argparse
 
 from kobuki_msgs.msg import ButtonEvent
 
@@ -18,9 +19,12 @@ from messages.BallDetectionMessage import BallDetectionMessage
 from std_msgs.msg import String
 
 class NodeBallDetection(object):
-  def __init__(self, name="NodeBallDetection"):
+  
+  def __init__(self, nthframe=1, normalize=False, name="NodeBallDetection"):
     rospy.init_node(name, anonymous=False)
     rospy.loginfo("Stop detection by pressing CTRL + C")
+    rospy.loginfo(name + " using normalization: " + str(normalize))
+    rospy.loginfo(name + " using every n-th frame " + str(nthframe))
 
     self.detectBlob = DetectBlob()
     
@@ -39,9 +43,11 @@ class NodeBallDetection(object):
     self.msgBall = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size=1)
 
     # proceed every n-th frame from cmdline
-    self.nthframe = int(sys.argv[1])
+    self.nthframe = nthframe
     self.counter = 1
     self.depthCounter = 1
+    
+    self.normalize = normalize
 
   def buttonListener(self, data):
       print("buttonListener")
@@ -87,9 +93,6 @@ class NodeBallDetection(object):
     #TODO: Find best one?
     #if (keypoints.size == 1):
     for item in keypoints :
-        #item = keypoints[0]
-        print "keypoint"
-        
         # Coordinates and radius
         x = int(item.pt[0])
         y = int(item.pt[1])
@@ -103,6 +106,15 @@ class NodeBallDetection(object):
             #depth in mm
             #TODO: Normalize: Average values in detected circle
             
+            y_range = range(y - r/2, y + r/2)
+            x_range = range(x - r/2, x + r/2)
+            depthArray = self.depthImage[np.ix_(y_range,x_range)]
+            depthSum = 0
+            for i in range(len(depthArray)):
+				for j in range(len(depthArray[i])):
+					depthSum = depthSum + depthArray[i][j]
+            normalizedDepth = depthSum / (len(depthArray) * len(depthArray[0]))
+            
             #
             # ATTENTION!
             # OpenCV uses height in 1st index pos and width on 2nd
@@ -110,7 +122,9 @@ class NodeBallDetection(object):
             
             #height, width = self.depthImage.shape[:2]
             #print width, height, x, y
-            depth = self.depthImage[y, x]
+            depth = normalizedDepth if self.normalize else self.depthImage[y, x]
+
+            #print("depth: %d  normalized: %d" % (depth, normalizedDepth))
             
             # 0,0 in OpenCV is left upper corner
             # Scale values in message between 0 - 100
@@ -121,6 +135,7 @@ class NodeBallDetection(object):
             
         except IndexError:
             # Ignore
+            print "Error"
             pass
 
     # Publish BallDetectionMessage
@@ -175,7 +190,12 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     rospy.signal_shutdown("Correct end.")
 
 if __name__ == '__main__':
-    nbd = NodeBallDetection();
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--normalize', help='Normalize depth values using points in detected ball\'s area (square based)', default=False, action='store_true')
+    parser.add_argument('--nthframe', help='Use only n-th frame for detection', default=1, nargs='?', type=int)
+    args = parser.parse_args()
+	
+    nbd = NodeBallDetection(args.nthframe, args.normalize);
     
     # GUI in separate thread
     thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, ))
