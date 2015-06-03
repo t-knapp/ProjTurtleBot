@@ -17,7 +17,7 @@ class NodeBallJourney(object):
         rospy.init_node(name, anonymous=False)
         rospy.loginfo("Stop detection by pressing CTRL + C")
 
-        #rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
+        rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
         rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
         rospy.Subscriber("/soccer/heading/", String, self.directionCallback, queue_size = 1)
         self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=3)

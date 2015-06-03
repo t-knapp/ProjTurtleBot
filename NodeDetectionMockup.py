@@ -12,6 +12,7 @@ class InputWindow(object):
         rospy.init_node(name, anonymous=False)
         dm = DirectionMessage()
         bdm = BallDetectionMessage()
+        run_pubrospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
         bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
         dm_pub =  rospy.Publisher("/soccer/heading/", String, self.directionCallback, queue_size = 1)
         dm.GOAL_DIRECTION
