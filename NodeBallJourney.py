@@ -16,8 +16,8 @@ class NodeBallJourney(object):
 
         rospy.init_node(name, anonymous=False)
         rospy.loginfo("Stop detection by pressing CTRL + C")
-
-        #rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
+        
+        rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
         rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
         rospy.Subscriber("/soccer/heading/", String, self.directionCallback, queue_size = 1)
         self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=3)
@@ -69,7 +69,7 @@ class NodeBallJourney(object):
 
 
                 move_cmd.linear.x = linear_speed
-                linear_speed.angular.z = angular_speed
+                move_cmd.angular.z = angular_speed
                 self.cmd_vel.publish(move_cmd)
             r.sleep()
 
@@ -79,9 +79,11 @@ class NodeBallJourney(object):
 
     # CALLBACKS
     def runCallback(self, data):
-        self.run = data
+        print data
+        self.run = data.data
 
     def directionCallback(self, data):
+        print data
         message = DirectionMessage.fromJSONString(data.data)
         if(message.type == DirectionMessage.GOAL_DIRECTION):
             self.goalPosition = message.degrees
@@ -89,6 +91,7 @@ class NodeBallJourney(object):
             self.heading == message.degrees
 
     def detectionCallBack(self, data):
+        print data
         self.ballMessage = BallDetectionMessage.fromJSONString(data.data)
 
 
