@@ -7,18 +7,16 @@ from std_msgs.msg import Bool
 
 class BallDetectionMockWindow():
     def __init__(self):
-        rospy.init_node("Mockup Dingsi", anonymous=False)
+        rospy.init_node("MockupDingsi", anonymous=False)
         root = Tk()
         root.title("Ball Detection Mock Window")
         root.geometry("200x200")
+        
 
         self.run_pub = rospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
-        self.bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
-        self.dm_pub =  rospy.Publisher("/soccer/heading/", String, self.directionCallback, queue_size = 1)
-
-        rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
-        bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
-        dm_pub =  rospy.Publisher("/soccer/heading/", String, self.directionCallback, queue_size = 1)
+        self.bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size = 1)
+        self.dm_pub =  rospy.Publisher("/soccer/heading/", String, queue_size = 1)
+        
 
         Label(root, text="x").grid(row=0)
         Label(root, text="y").grid(row=1)
@@ -34,7 +32,7 @@ class BallDetectionMockWindow():
         self.e4 = Entry(root)
         self.e4.insert(0, "0")
         self.e5 = Entry(root)
-        self.e4.insert(0, "0")
+        self.e5.insert(0, "0")
 
         self.e1.grid(row=0, column=1)
         self.e2.grid(row=1, column=1)
@@ -43,8 +41,12 @@ class BallDetectionMockWindow():
         self.e5.grid(row=4, column=1)
 
         b = Button(root, text="send", width=10, command=self.send)
-        b = Button(root, text="On", width=10, command=self.on)
-        b = Button(root, text="Off", width=10, command=self.off)
+        b1 = Button(root, text="On", width=10, command=self.on)
+        b2 = Button(root, text="Off", width=10, command=self.off)
+        
+        b.grid(row = 5, column=1)
+        b1.grid(row = 6, column=1)
+        b2.grid(row = 7, column=1)
 
 
         root.mainloop()
@@ -55,13 +57,18 @@ class BallDetectionMockWindow():
         bdm.y = int(self.e2.get())
         bdm.distance = int(self.e3.get())
         self.bdm_pub.publish(String(bdm.toJSONString()))
+        dm = DirectionMessage(int(self.e4.get()), DirectionMessage.GOAL_DIRECTION)
+        self.dm_pub.publish(String(dm.toJSONString()))
+        dm = DirectionMessage(int(self.e5.get()), DirectionMessage.SELF_DIRECTION)
+        self.dm_pub.publish(String(dm.toJSONString()))
 
-    def on:
-        sendRun(True)
+
+    def on(self):
+        self.sendRun(True)
 
 
-    def off:
-        sendRun(False)
+    def off(self):
+        self.sendRun(False)
 
     def sendRun(self, b):
         self.run_pub.publish(Bool(b))

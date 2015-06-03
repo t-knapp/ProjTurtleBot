@@ -3,6 +3,8 @@ from std_msgs.msg import Bool
 from std_msgs.msg import String
 import numpy as np
 from math import radians
+import random
+
 
 
 from messages.BallDetectionMessage import BallDetectionMessage
@@ -35,7 +37,7 @@ class NodeBallJourney(object):
         self.state = 0
         while(not rospy.is_shutdown()):
             while(self.run):
-                if self.ballMessage.distance > 10 and self.ballMessage.ballDetected: # TODO: Wert anpassen
+                if self.ballMessage.distance > 300 and self.ballMessage.ballDetected:
                     # Bei Mindestabstand zum Ball -> anfahrt
                     self.state = 0
                     if self.correctHeading():
@@ -44,8 +46,11 @@ class NodeBallJourney(object):
                         angular_speed = self.calculateAngularSpeed()
                     else:
                         # Der Ball von der anderen seite angefahren werden
-                        linear_speed = 0.125
-                        angular_speed = self.calculateAngularSpeed(80,100)
+                        linear_speed = 0.1
+                        if random.randint(0,9) >=6:
+                                angular_speed = self.calculateAngularSpeed(70,99)
+                        else
+                                angular_speed = self.calculateAngularSpeed(1,30)
                 else:
                     if self.state == 0:
                         if self.ballMessage.ballDetected:
@@ -69,6 +74,7 @@ class NodeBallJourney(object):
 
 
                 move_cmd.linear.x = linear_speed
+                move_cmd.linear.x = 0
                 move_cmd.angular.z = angular_speed
                 self.cmd_vel.publish(move_cmd)
             r.sleep()
@@ -88,7 +94,7 @@ class NodeBallJourney(object):
         if(message.type == DirectionMessage.GOAL_DIRECTION):
             self.goalPosition = message.degrees
         if(message.type == DirectionMessage.SELF_DIRECTION):
-            self.heading == message.degrees
+            self.heading = message.degrees
 
     def detectionCallBack(self, data):
         print data
@@ -97,18 +103,23 @@ class NodeBallJourney(object):
 
     # Calculations
     def correctHeading(self):
+        return abs(self.goalPosition - self.heading) <= 90
+        
+        
         return range(((self.heading -90) % 360),((self.heading +90) % 360))
 
-    def calculateAngularSpeed(self, leftBorder=40, rightBorder=60, maxAngularSpeed = 0.33):
+    def calculateAngularSpeed(self, leftBorder=45, rightBorder=55, maxAngularSpeed = 0.33):
 
-        if leftBorder >= self.ballMessage.x <= rightBorder:
+        if leftBorder <= self.ballMessage.x and self.ballMessage.x <= rightBorder:
             return 0.0
         if leftBorder > self.ballMessage.x:
+            print ("LEFT %d > %d" % (leftBorder, self.ballMessage.x))
             return maxAngularSpeed-self.ballMessage.x*(maxAngularSpeed/leftBorder)
         if rightBorder < self.ballMessage.x:
+            print ("RIGHT %d < %d" % (rightBorder, self.ballMessage.x))
             a = (maxAngularSpeed/(100 - rightBorder))
             b = a* 100 - maxAngularSpeed
-            return self.ballMessage.x * a - b
+            return -(self.ballMessage.x * a - b)
 
 
 
