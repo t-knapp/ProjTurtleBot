@@ -13,10 +13,11 @@ class InputWindow(object):
         rospy.init_node(name, anonymous=False)
         dm = DirectionMessage(0, DirectionMessage.GOAL_DIRECTION)
         bdm = BallDetectionMessage()
+        
         bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size = 1)
         dm_pub =  rospy.Publisher("/soccer/heading/", String, queue_size = 1)
         run_pub = rospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
-
+        
         dm.GOAL_DIRECTION
         dm.degrees = 90;
         dm_pub.publish(String(dm.toJSONString()))
