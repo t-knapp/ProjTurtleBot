@@ -237,10 +237,10 @@ class HSVGui(object):
         self.listData['last']['filtersShape'][2]['max'] = self.filterShape[2].maximum
         
         ''' Filter Blur '''
-	self.listData["last"]["filterBlur"] = self.filterBlur
+        self.listData["last"]["filterBlur"] = self.filterBlur
         
         with open('HSVGui.json', 'w') as outfile:
-            json.dump(self.listData, outfile)
+            json.dump(self.listData, outfile, sort_keys=True, indent=4, separators=(',', ': '))
         outfile.close();
 
     # Blocking mainloop
