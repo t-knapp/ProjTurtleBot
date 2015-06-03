@@ -27,8 +27,6 @@ class NodeBallDetection(object):
     self.cv_bridge = CvBridge()
 
     cv2.namedWindow("image_view", 1)
-    #cv2.startWindowThread()
-
     cv2.namedWindow("depth", 1)
     cv2.startWindowThread()
 
@@ -41,40 +39,38 @@ class NodeBallDetection(object):
     self.msgBall = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size=1)
 
     # proceed every n-th frame from cmdline
-    self.counter = 1
     self.nthframe = int(sys.argv[1])
-
+    self.counter = 1
     self.depthCounter = 1
 
   def buttonListener(self, data):
       print("buttonListener")
 
-  def processDepthImage(self, depth):
+  def processDepthImage(self, data):
+    # only n-th image
     if(self.nthframe !=0 and (self.depthCounter % self.nthframe != 0)):
         self.depthCounter = self.depthCounter + 1
         return
     
+    #print data.width, data.height
+    
     # Draw image 'as it is'
-    depth = self.cv_bridge.imgmsg_to_cv2(depth, "passthrough")
+    depth = self.cv_bridge.imgmsg_to_cv2(data, "passthrough")
+    #depth = self.cv_bridge.imgmsg_to_cv2(data, "32FC1")
+    #depth_array = np.array(depth, dtype=np.float32)
+
     cv2.imshow("depth", depth)
     
+    self.depthCounter = 1
 
-    self.depthCounter = self.depthCounter + 1
-
-
-    # print ("processdepthimage")
-
-    #methodList = [method for method in dir(depth) if callable(getattr(depth, method))]
-    #for m in methodList:
-    #  print(m)
-
-    
+    #height, width = depth.shape[:2]
+    #print (width, height)
 
     self.depthImage = depth
 
   def processImages(self, ros_img):
+    # proceed only n-th image
     if(self.nthframe != 0):
-        #print(NodeBallDetection.counter, self.nthframe)
         if(self.counter % self.nthframe != 0):
             self.counter = self.counter + 1
             return
@@ -83,30 +79,54 @@ class NodeBallDetection(object):
     keypoints = self.detectBlob.getBlobs(img)
    
     msgBallDetection = BallDetectionMessage()
+    msgBallDetection.x = 0
+    msgBallDetection.y = 0
+    msgBallDetection.distance = 0
+    msgBallDetection.ballDetected = False
  
     #TODO: Find best one?
+    #if (keypoints.size == 1):
     for item in keypoints :
-    #    print("\tx %d , y %d, d: %d" % (item.pt[0],item.pt[1], item.size))
-        cv2.circle(img, (int(item.pt[0]),int(item.pt[1])), int(item.size), (0,255,100),5)
-        #print(self.depthImage.at((int(item.pt[0]),int(item.pt[1]))))
-        #pos = int(item.pt[0]) * int(item.pt[1])
-        try:
-            depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
-            print depth
+        #item = keypoints[0]
+        print "keypoint"
+        
+        # Coordinates and radius
+        x = int(item.pt[0])
+        y = int(item.pt[1])
+        r = int(item.size)
+        
+        # Draw circle around ball
+        cv2.circle(img, (x,y), r, (0,255,100), 3)
 
-            msgBallDetection.y = int(item.pt[0])
-            msgBallDetection.x = int(item.pt[1])
+        try:
+            #depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
+            #depth in mm
+            #TODO: Normalize: Average values in detected circle
+            
+            #
+            # ATTENTION!
+            # OpenCV uses height in 1st index pos and width on 2nd
+            #
+            
+            #height, width = self.depthImage.shape[:2]
+            #print width, height, x, y
+            depth = self.depthImage[y, x]
+            
+            # 0,0 in OpenCV is left upper corner
+            # Scale values in message between 0 - 100
+            msgBallDetection.x = int((float(x)/ros_img.width) * 100)
+            msgBallDetection.y = abs(int((float(y)/ros_img.height) * 100) - 100)
             msgBallDetection.distance = depth.astype(int)
             msgBallDetection.ballDetected = True
-
-            # Publish BallDetectionMessage
-            self.msgBall.publish(String(msgBallDetection.toJSONString()))
-
+            
         except IndexError:
-            print "IndexError"
+            # Ignore
+            pass
+
+    # Publish BallDetectionMessage
+    self.msgBall.publish(String(msgBallDetection.toJSONString()))
 
     # Display the resulting frame
-    #cv2.imshow('frame',img)
     cv2.imshow("image_view", img)
     
     self.counter = 1
@@ -127,7 +147,7 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     gui.createScale(groupMax, "S", gui.toSvar, 0, 255)
     gui.createScale(groupMax, "V", gui.toVvar, 0, 255)
 
-    ''' Filter '''    
+    # Filter  
     groupShapeFilters = gui.createScrollableLabelFrame("Shape-Filters", 0, 1)
     gui.createShapeFilterOption(groupShapeFilters, "Activate Circularity", gui.cbCircularityVar, "Min.", gui.scCircularityMinVar, 0, 1, "Max.", gui.scCircularityMaxVar, 0, 1)
     gui.createShapeFilterOption(groupShapeFilters, "Activate Inertia", gui.cbInertiaVar, "Min.", gui.scInertiaMinVar, 0, 1, "Max.", gui.scInertiaMaxVar, 0, 1)
@@ -137,7 +157,6 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     gui.createSingleRadioBtn(groupBlur, "None", gui.rbBlurVar, 1)
     gui.createSingleRadioBtn(groupBlur, "Activate GaussianBlur", gui.rbBlurVar, 2)  
     gui.createSingleRadioBtn(groupBlur, "Activate MedianBlur", gui.rbBlurVar, 3)  
-    
 
     # List
     gui.initList("Speichern/Laden", 2, 0)
@@ -151,6 +170,9 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
 
     # Close all opencv windows
     cv2.destroyAllWindows()
+    
+    # Quit Node
+    rospy.signal_shutdown("Correct end.")
 
 if __name__ == '__main__':
     nbd = NodeBallDetection();
