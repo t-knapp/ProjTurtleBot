@@ -6,6 +6,7 @@ import json
 from std_msgs.msg import String
 
 
+
 class InputWindow(object):
     def __init__(self, name="NodeBallJourney"):
         rospy.init_node(name, anonymous=False)
