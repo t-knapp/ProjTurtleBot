@@ -11,8 +11,15 @@ from messages.BallDetectionMessage import BallDetectionMessage
 from messages.DirectionMessage import DirectionMessage
 from geometry_msgs.msg import Twist
 
+CORRECT_HEADING = 1
+OPPOSITE_HEADING = 5
+OPPOSITE_HEADING_TURN = 6
+OPPOSITE_HEADING_TURN_DONE = 7
+COMPLETE = 10
+LOST_BALL = 99
 
 class NodeBallJourney(object):
+
 
     def __init__(self, name="NodeBallJourney"):
 
@@ -34,47 +41,78 @@ class NodeBallJourney(object):
         angular_speed = 0
         r = rospy.Rate(10)
         move_cmd = Twist()
-        self.state = 0
+        self.state = -1
+        self.lostBall = 0
         while(not rospy.is_shutdown()):
             while(self.run):
-                if self.ballMessage.distance > 300 and self.ballMessage.ballDetected:
+                print self.state
+                if self.ballMessage.distance > 650 and self.ballMessage.ballDetected:
                     # Bei Mindestabstand zum Ball -> anfahrt
-                    self.state = 0
-                    if self.correctHeading():
+                    self.lostBall = 0
+                    if True or self.correctHeading():
                         # Ball Tor und Roboter stehen in Richtiger Konstelation zusammen
+                        self.state = CORRECT_HEADING
                         linear_speed = 0.1
                         angular_speed = self.calculateAngularSpeed()
                     else:
                         # Der Ball von der anderen seite angefahren werden
+                        self.state = OPPOSITE_HEADING
                         linear_speed = 0.1
                         if random.randint(0,9) >=6:
                                 angular_speed = self.calculateAngularSpeed(70,99)
-                        else
+                        else:
                                 angular_speed = self.calculateAngularSpeed(1,30)
                 else:
-                    if self.state == 0:
+                    if self.ballMessage.ballDetected:
+                        self.lostBall = 0
+                    else:
+                        self.lostBall = self.lostBall + 1
+
+                    if self.state == CORRECT_HEADING:
                         if self.ballMessage.ballDetected:
                             linear_speed = 0.0
                             angular_speed = self.calculateAngularSpeed()
+                            if angular_speed < 0.01:
+                                self.state = COMPLETE
                         else:
-                            self.state = 1
-                    elif self.state == 1:
+			                linear_speed = 0.0
+			                angular_speed = 0.0
+                            #if self.lostBall > 200:
+                            #    self.state = LOST_BALL
+
+                    elif self.state == OPPOSITE_HEADING:
+                        if self.ballMessage.ballDetected:
+                            linear_speed = 1.0
+                            angular_speed = self.calculateAngularSpeed(70,99)
+                        else:
+                            # make turn
+                            self.state = OPPOSITE_HEADING_TURN
+
+                    elif self.state == OPPOSITE_HEADING_TURN:
+                        #
                         for x in range(0,10):
                             move_cmd.linear.x = 0
                             move_cmd.angular.z = radians(180)
                             self.cmd_vel.publish(move_cmd)
                             r.sleep()
-                        self.state = 2
-                    elif self.state == 2:
+                        self.state = 3
+
+                    elif self.state == OPPOSITE_HEADING_TURN_DONE: 
                         if self.ballMessage.ballDetected:
-                            self.state = 0
+                            self.state = CORRECT_HEADING
                         else:
-                            # lost ball -> do something
-                            self.state = 0
+                            if self.lostBall > 400:
+                                self.state = LOST_BALL
+                            else:
+                                self.state =OPPOSITE_HEADING
+
+                    elif self.state == LOST_BALL:
+                        self.state = CORRECT_HEADING
+                    elif self.state == COMPLETE:
+                        self.state = COMPLETE
 
 
                 move_cmd.linear.x = linear_speed
-                move_cmd.linear.x = 0
                 move_cmd.angular.z = angular_speed
                 self.cmd_vel.publish(move_cmd)
             r.sleep()
@@ -108,15 +146,13 @@ class NodeBallJourney(object):
         
         return range(((self.heading -90) % 360),((self.heading +90) % 360))
 
-    def calculateAngularSpeed(self, leftBorder=45, rightBorder=55, maxAngularSpeed = 0.33):
+    def calculateAngularSpeed(self, leftBorder=48, rightBorder=52, maxAngularSpeed = 0.8):
 
         if leftBorder <= self.ballMessage.x and self.ballMessage.x <= rightBorder:
             return 0.0
         if leftBorder > self.ballMessage.x:
-            print ("LEFT %d > %d" % (leftBorder, self.ballMessage.x))
             return maxAngularSpeed-self.ballMessage.x*(maxAngularSpeed/leftBorder)
         if rightBorder < self.ballMessage.x:
-            print ("RIGHT %d < %d" % (rightBorder, self.ballMessage.x))
             a = (maxAngularSpeed/(100 - rightBorder))
             b = a* 100 - maxAngularSpeed
             return -(self.ballMessage.x * a - b)
