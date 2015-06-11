@@ -14,10 +14,12 @@ from geometry_msgs.msg import Twist
 
 from soccer.messages.BallDetectionMessage import BallDetectionMessage
 
+STATE_TURN = 1
+STATE_MOVE = 2
 
 class NodeBallDetection(object):
-  
-    def __init__(self, numFoundsInSequence=1, name="NodeBallSearch"):
+    
+    def __init__(self, numFoundsInSequence=1, turnLeft=False, name="NodeBallSearch"):
         rospy.init_node(name, anonymous=False)
         rospy.loginfo("Stop ball search by pressing CTRL + C")
 
@@ -28,25 +30,51 @@ class NodeBallDetection(object):
         self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
 
         r = rospy.Rate(5)
+        
         # Turn
         turn_cmd = Twist()
         turn_cmd.linear.x = 0
-        turn_cmd.angular.z = radians(45); #45 deg/s in radians/s
+        turn_cmd.angular.z = radians(45) if turnLeft else radians(-45); #45 deg/s in radians/s
+        
+        # Move straight
+        move_cmd = Twist()
+        move_cmd.linear.x = 0.25 # 0.25 m/s
+        move_cmd.angular.z = 0
         
         self.numMsgsInSequenceFoundBall = 0
         self.lastMsgFoundBall = False
         self.numFoundsInSequence = numFoundsInSequence
         
         self.run = True
+        
+        rounds = 0
+        
+        state = STATE_TURN
 
         while not rospy.is_shutdown() and self.run:
             
-	        # Spin for 2 seconds (10 x 5 HZ)
-            #          1 second  ( 5 x 5 Hz)
-            for x in range(0,3):
-                self.move.publish(turn_cmd)
-                r.sleep()
+            if state == STATE_TURN:
+	            # Spin for 2 seconds (10 x 5 HZ)
+                #          1 second  ( 5 x 5 Hz)
+                for x in range(0,5):
+                    if self.run:
+                        self.move.publish(turn_cmd)
+                        r.sleep()
 
+                rounds = rounds + 1
+                if rounds == 11:
+                    #self.run = False
+                    state = STATE_MOVE
+                    rounds = 0
+                    
+            elif state == STATE_MOVE:
+                # Move foreward for 1 second and start over
+                for x in range(0,15):
+                    if self.run:
+                        self.move.publish(move_cmd)
+                        r.sleep()
+                                
+                state = STATE_TURN
 
     def callbackBallPosition(self, strData):
         
@@ -69,7 +97,7 @@ if __name__ == '__main__':
     parser.add_argument('--num', help='Number of found messages in sequence needed to assume ball is found.', default=1, nargs='?', type=int)
     args = parser.parse_args()
     
-    try:
-        NodeBallDetection(args.num)
-    except:
-        rospy.loginfo("Node terminated in main-method")
+    #try:
+    NodeBallDetection(args.num, turnLeft=False) #False => Right
+    #except:
+    #    rospy.loginfo("Node terminated in main-method")
