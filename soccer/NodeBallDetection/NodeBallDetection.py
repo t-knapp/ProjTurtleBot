@@ -51,6 +51,10 @@ class NodeBallDetection(object):
     self.depthCounter = 1
     
     self.normalize = normalize
+    
+    
+    # How many pixels are cropped in y axis from 0 (top)
+    self.imageCrop = 200
 
   def buttonListener(self, data):
       print("buttonListener")
@@ -64,7 +68,8 @@ class NodeBallDetection(object):
     #print data.width, data.height
     
     # Draw image 'as it is'
-    depth = self.cv_bridge.imgmsg_to_cv2(data, "passthrough")
+    depthFull = self.cv_bridge.imgmsg_to_cv2(data, "passthrough")
+    depth = depthFull[self.imageCrop:480, 0:640]
     #depth = self.cv_bridge.imgmsg_to_cv2(data, "32FC1")
     #depth_array = np.array(depth, dtype=np.float32)
 
@@ -83,8 +88,11 @@ class NodeBallDetection(object):
         if(self.counter % self.nthframe != 0):
             self.counter = self.counter + 1
             return
-   
-    img = self.cv_bridge.imgmsg_to_cv2(ros_img, "bgr8")
+    
+    fullimg = self.cv_bridge.imgmsg_to_cv2(ros_img, "bgr8")
+    img = fullimg[self.imageCrop:480, 0:640] # y oben start: y unten ende, x links start: x rechts ende
+    
+    # ToDo: Crop image with cv 'region of interest'
     keypoints = self.detectBlob.getBlobs(img)
    
     msgBallDetection = BallDetectionMessage()
@@ -94,16 +102,30 @@ class NodeBallDetection(object):
     msgBallDetection.ballDetected = False
  
     #TODO: Find best one?
-    #if (keypoints.size == 1):
+    ''' Ideas:
+    SYSA Like Boids: Calculate Center of all keypoints and assume as Ball
+    Average x , y values of all keypoints as center
+    '''
+    
+    centerX = 0;
+    centerY = 0;
+    centerR = 0;
+    
     for item in keypoints :
+    #if len(keypoints) == 1:
+        #item = keypoints[0]
         # Coordinates and radius
         x = int(item.pt[0])
         y = int(item.pt[1])
         r = int(item.size)
         
+        centerX = centerX + x
+        centerY = centerY + y
+        centerR = centerR + r
+        
         # Draw circle around ball
-        cv2.circle(img, (x,y), r, (0,255,100), 3)
-
+        #cv2.circle(img, (x,y), r, (0,255,100), 3)
+        '''
         try:
             #depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
             #depth in mm
@@ -114,8 +136,8 @@ class NodeBallDetection(object):
             depthArray = self.depthImage[np.ix_(y_range,x_range)]
             depthSum = 0
             for i in range(len(depthArray)):
-				for j in range(len(depthArray[i])):
-					depthSum = depthSum + depthArray[i][j]
+                for j in range(len(depthArray[i])):
+                    depthSum = depthSum + depthArray[i][j]
             normalizedDepth = depthSum / (len(depthArray) * len(depthArray[0]))
             
             #
@@ -135,11 +157,57 @@ class NodeBallDetection(object):
             msgBallDetection.y = abs(int((float(y)/ros_img.height) * 100) - 100)
             msgBallDetection.distance = depth.astype(int)
             msgBallDetection.ballDetected = True
+            '''
+        #except IndexError:
+            # Ignore
+        #    print "Error"
+        #    pass
+
+
+    if len(keypoints) > 0:
+        centerX = centerX / len(keypoints)
+        centerY = centerY / len(keypoints)
+        centerR = centerR / len(keypoints)
+        
+        try:
+            #depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
+            #depth in mm
+            #TODO: Normalize: Average values in detected circle
             
+            y_range = range(y - r/2, y + r/2)
+            x_range = range(x - r/2, x + r/2)
+            depthArray = self.depthImage[np.ix_(y_range,x_range)]
+            depthSum = 0
+            for i in range(len(depthArray)):
+                for j in range(len(depthArray[i])):
+                    depthSum = depthSum + depthArray[i][j]
+            normalizedDepth = depthSum / (len(depthArray) * len(depthArray[0]))
+            
+            #
+            # ATTENTION!
+            # OpenCV uses height in 1st index pos and width on 2nd
+            #
+            
+            #height, width = self.depthImage.shape[:2]
+            #print width, height, x, y
+            depth = normalizedDepth if self.normalize else self.depthImage[y, x]
         except IndexError:
             # Ignore
             print "Error"
             pass
+                
+        
+        # 0,0 in OpenCV is left upper corner
+        # Scale values in message between 0 - 100
+        msgBallDetection.x = int((float(centerX)/ros_img.width) * 100)
+        msgBallDetection.y = abs(int((float(centerY)/ros_img.height) * 100) - 100)
+        msgBallDetection.distance = depth.astype(int)
+        msgBallDetection.ballDetected = True
+    
+        cv2.circle(img, (centerX,centerY), centerR, (0,0,255), 2)
+
+    # Save last Message
+    self.lastFoundMsg = msgBallDetection
 
     # Publish BallDetectionMessage
     self.msgBall.publish(String(msgBallDetection.toJSONString()))
@@ -197,7 +265,7 @@ if __name__ == '__main__':
     parser.add_argument('--normalize', help='Normalize depth values using points in detected ball\'s area (square based)', default=False, action='store_true')
     parser.add_argument('--nthframe', help='Use only n-th frame for detection', default=1, nargs='?', type=int)
     args = parser.parse_args()
-	
+
     nbd = NodeBallDetection(args.nthframe, args.normalize);
     
     # GUI in separate thread
