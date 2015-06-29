@@ -1,10 +1,15 @@
+import sys
+sys.path.append('../../')
+
 import rospy
 from std_msgs.msg import Bool
 from std_msgs.msg import String
-from geometry_msg.msg import Quaternion
-import numpy as np
+from geometry_msgs.msg import Quaternion
+from sensor_msgs.msg import Imu
+import numpy
 from math import radians
 import random
+import math
 
 
 
@@ -31,11 +36,18 @@ class NodeBallJourney(object):
         rospy.Subscriber("/soccer/balljourney/run", Bool, self.runCallback, queue_size=1)
         rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.detectionCallBack, queue_size = 1)
         rospy.Subscriber("/mobile_base/sensors/imu_data", Imu, self.directionCallback, queue_size = 1)
-        self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=3)
+        
+        self.lostEvent = rospy.Publisher('soccer/lostBall', String, queue_size=3)
+        self.finishedEvent = rospy.Publisher('/soccer/balljourney/finished', String, queue_size=3)
 
+        #self.cmd_vel = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=3)
+        self.cmd_vel = rospy.Publisher('/soccer/movement', Twist, queue_size=1)
+        
         self.goalPosition = 0
         self.heading = 0
         self.ballMessage = BallDetectionMessage(0,0,0)
+        self.distance = [0,0,0,0,0]
+        self._distanceIndex = 0
 
         self.run = True
 
@@ -49,8 +61,7 @@ class NodeBallJourney(object):
             while(not rospy.is_shutdown()):
                 if(self.state != LOST_BALL):
                     if self.ballMessage.ballDetected:
-                        self.lostBall = 0
-                        if self.ballMessage.distance > 1050:
+                        if self.avgDistance > 650:
                             if self.correctHeading():
                                 # Ball Tor und Roboter stehen in Richtiger Konstelation zusammen
                                 self.setState(CORRECT_HEADING)
@@ -65,10 +76,9 @@ class NodeBallJourney(object):
                             else:
                                 # Der Ball soll von der anderen seite angefahren werden
                                     self.setState(OPPOSITE_HEADING)
-                            self.lostBall = self.lostBall + 1
             
 
-                if self.lostBall >1500:
+                if self.lostBall >50:
                     self.setState(LOST_BALL)
                 
                 
@@ -102,17 +112,10 @@ class NodeBallJourney(object):
                     elif self.lostBall > 4000:
                             self.state = LOST_BALL
                 elif self.state == LOST_BALL:
-                    angular_speed = 0
-                    linear_speed = 0
-                    self.lostBall = 0
-                    move_cmd.linear.x = linear_speed
-                    move_cmd.angular.z = angular_speed
-                    self.cmd_vel.publish(move_cmd)
-
-                    for x in range(0,10):
-                        r.sleep()
-                    self.state = CORRECT_HEADING
-                # Send ERROR
+                    self.run = False
+                    self.linear_speed = 0
+                    self.angular_speed = 0
+                    self.lostEvent.publish("LOST BALL")
                 
                 move_cmd.linear.x = linear_speed
                 move_cmd.angular.z = angular_speed
@@ -125,34 +128,37 @@ class NodeBallJourney(object):
 
     # CALLBACKS
     def runCallback(self, data):
-        print data
+        
         self.run = data.data
 
     def directionCallback(self, data):
-        message = DirectionMessage.fromJSONString(data.data)
-        if(message.type == DirectionMessage.GOAL_DIRECTION):
-            self.goalPosition = message.degrees
-        if(message.type == DirectionMessage.SELF_DIRECTION):
-            self.heading = message.degrees
+        w = float(data.orientation.w)
+        angle = math.acos(w)
+        self.heading = angle
 
     def detectionCallBack(self, data):
-	print data
-	w = data.orientation.w
-	angle = Math.acos(2* w)
-	print angle
-       # self.ballMessage = BallDetectionMessage.fromJSONStrinig(data.data)
+        self.ballMessage = BallDetectionMessage.fromJSONString(data.data)
+        if self.ballMessage.ballDetected:
+            self.distance[self._distanceIndex] = self.ballMessage.distance
+            self._distanceIndex = self._distanceIndex + 1
+            self._distanceIndex = self._distanceIndex % 5
+            self.lostBall = 0
+        else:
+            self.lostBall += 1
 
 
     # Calculations
-    def calculateLinearSpeed(self, distance, min_distance = 650, maxSpeed = 0.5):
+    def calculateLinearSpeed(self, distance, min_distance = 650, maxSpeed = 0.1):
         x = (maxSpeed/2000 * distance) % maxSpeed
         return maxSpeed
 
     def correctHeading(self):
-        return abs(self.goalPosition - self.heading) <= 90
+        return self.heading < 0.75
+    #        return abs(self.goalPosition - self.heading) <= 90
+
 
     def calculateAngularSpeed(self, leftBorder=45, rightBorder=55, maxAngularSpeed = 0.5):
-
+        return 0
         if leftBorder <= self.ballMessage.x and self.ballMessage.x <= rightBorder:
             return 0.0
         if leftBorder > self.ballMessage.x:
@@ -165,8 +171,11 @@ class NodeBallJourney(object):
 
     def setState(self, state):
         if(state != self.state):
-            print "New State = " + str(state) + " " + str(self.lostBall)
+            print "New State = " + str(state) + " " + str(self.lostBall) + " distance: " + str(self.avgDistance())
         self.state = state
+
+    def avgDistance(self):
+        return numpy.mean(self.distance)
 
 
 if __name__ == '__main__':

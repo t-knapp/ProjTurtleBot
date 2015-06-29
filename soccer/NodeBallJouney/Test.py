@@ -1,4 +1,6 @@
 from Tkinter import *
+import sys
+sys.path.append('../../')
 import rospy
 from messages.DirectionMessage import DirectionMessage
 from messages.BallDetectionMessage import BallDetectionMessage
@@ -15,8 +17,8 @@ class BallDetectionMockWindow():
 
         self.run_pub = rospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
         self.bdm_pub = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size = 1)
-        self.dm_pub =  rospy.Publisher("/soccer/heading/", String, queue_size = 1)
-        
+        self.referee = rospy.Publisher("/soccer/referee", Bool, queue_size = 1)
+    
 
         Label(root, text="x").grid(row=0)
         Label(root, text="y").grid(row=1)
@@ -65,13 +67,16 @@ class BallDetectionMockWindow():
 
     def on(self):
         self.sendRun(True)
+        self.referee.publish(True)
 
 
     def off(self):
         self.sendRun(False)
+        self.referee.publish(False)
 
     def sendRun(self, b):
-        self.run_pub.publish(Bool(b))
+        i = 1
+        #self.run_pub.publish(Bool(b))
 
 
 if __name__ == '__main__':
