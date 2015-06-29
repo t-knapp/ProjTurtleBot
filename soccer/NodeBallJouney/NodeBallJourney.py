@@ -46,7 +46,7 @@ class NodeBallJourney(object):
         self.goalPosition = 0
         self.heading = 0
         self.ballMessage = BallDetectionMessage(0,0,0)
-        self.distance = [0,0,0,0,0]
+        self.distance = [700,700,700,700,700]
         self._distanceIndex = 0
 
         self.run = True
@@ -57,11 +57,13 @@ class NodeBallJourney(object):
         move_cmd = Twist()
         self.state = -1
         self.lostBall = 0
+        _distanceCount = 0
         while(not rospy.is_shutdown()):
-            while(not rospy.is_shutdown()):
+            while(self.run):
                 if(self.state != LOST_BALL):
                     if self.ballMessage.ballDetected:
                         if self.avgDistance > 650:
+                            _distanceCount = 0
                             if self.correctHeading():
                                 # Ball Tor und Roboter stehen in Richtiger Konstelation zusammen
                                 self.setState(CORRECT_HEADING)
@@ -70,12 +72,16 @@ class NodeBallJourney(object):
                                 self.setState(OPPOSITE_HEADING)
 
                     else:
-                            if self.correctHeading():
+                            if self.correctHeading() :
                                 # ZU NAH DRAN
-                                self.setState(DISTANCE)
+                                linear_speed =0
+                                angular_speed = 0
+                                _distanceCount = _distanceCount +1
+                                if _distanceCount > 2000:
+                                    self.setState(DISTANCE)
                             else:
                                 # Der Ball soll von der anderen seite angefahren werden
-                                    self.setState(OPPOSITE_HEADING)
+                                self.setState(OPPOSITE_HEADING)
             
 
                 if self.lostBall >50:
@@ -83,7 +89,7 @@ class NodeBallJourney(object):
                 
                 
                 
-                if self.state == CORRECT_HEADING or self.state == DISTANCE:
+                if self.state == CORRECT_HEADING:
                     linear_speed = self.calculateLinearSpeed(self.ballMessage.distance)
                     angular_speed = self.calculateAngularSpeed()
                     if angular_speed < 0.05:
@@ -116,7 +122,12 @@ class NodeBallJourney(object):
                     self.linear_speed = 0
                     self.angular_speed = 0
                     self.lostEvent.publish("LOST BALL")
-                
+                elif self.state == DISTANCE:
+                    self.run = False
+                    self.linear_speed = 0
+                    self.angular_speed = 0
+                    self.finishedEvent.publish("FINISHED")
+
                 move_cmd.linear.x = linear_speed
                 move_cmd.angular.z = angular_speed
                 self.cmd_vel.publish(move_cmd)
