@@ -10,6 +10,8 @@ import numpy as np
 import message_filters
 
 from std_msgs.msg import String
+from std_msgs.msg import Bool
+
 from geometry_msgs.msg import Twist
 
 from soccer.messages.BallDetectionMessage import BallDetectionMessage
@@ -25,9 +27,10 @@ class NodeBallDetection(object):
 
         # Subscribe to NodeBallDetection
         rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.callbackBallPosition, queue_size=1)
-
+        
         # Publisher to movement
         self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
+        self.found = rospy.Publisher("/soccer/ballsearch/found", Bool, self.foundBallCallback, queue_size=1)
 
         r = rospy.Rate(5)
         
@@ -75,6 +78,7 @@ class NodeBallDetection(object):
                         r.sleep()
                                 
                 state = STATE_TURN
+        self.found.publish(True)
 
     def callbackBallPosition(self, strData):
         
