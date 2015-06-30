@@ -82,9 +82,11 @@ class NodeBallJourney(object):
                     move_cmd.linear.x = MAX_LINEAR_SPEED*2
                     if self.ballMessage.x > 50:
                         move_cmd.angular.z = self.calculateAngularSpeed(70,99)
+			side =0
                     else:
                         move_cmd.angular.z = self.calculateAngularSpeed(1,30)
-                    i = 0
+                   	side = 1 
+		    i = 0
                     print "NOW TURN"
                     while i< 3:
                         self.cmd_vel.publish(move_cmd)
@@ -100,11 +102,14 @@ class NodeBallJourney(object):
                     i = 0
                     self.lostBall = 0
                     move_cmd.linear.x = 0
+		    if side == 0:
+			move_cmd.angular.z= -1.5
+		    else:
+			move_cmd.angular.z = 1.5
                     print "U-TURN"
                     while i < 6:
                         print i
                         self.lostBall = 0
-                        move_cmd.angular.z = 1.5
                         i = i+1
                         self.cmd_vel.publish(move_cmd)
                         r.sleep()

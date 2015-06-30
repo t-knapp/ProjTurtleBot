@@ -18,7 +18,7 @@ from std_msgs.msg import String
 
 from detectBlob import DetectBlob
 from HSVGui import HSVGui
-from soccer.messages.BallDetectionMessage import BallDetectionMessage
+from soccer.messages.GoalDetectionMessage import GoalDetectionMessage
 
 
 class NodeGoalDetection(object):
@@ -43,7 +43,7 @@ class NodeGoalDetection(object):
     #rospy.Subscriber("/camera/depth/image", Image, self.processDepthImage, queue_size=1)
 
     # Publisher for BallDetection
-    self.msgBall = rospy.Publisher("/soccer/balldetection/ballPosition", String, queue_size=1)
+    self.msgBall = rospy.Publisher("/soccer/goalPosition", String, queue_size=1)
 
     # proceed every n-th frame from cmdline
     self.nthframe = nthframe
@@ -55,9 +55,6 @@ class NodeGoalDetection(object):
     
     # How many pixels are cropped in y axis from 0 (top)
     self.imageCrop = 200
-
-  def buttonListener(self, data):
-      print("buttonListener")
 
   def processDepthImage(self, data):
     # only n-th image
@@ -222,7 +219,7 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback);
 
     # Group min
-    groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);
+    groupMin = gui.createLabelFrame("Goal-Detection", 0, 0);
     gui.createScale(groupMin, "H", gui.fromHvar, 0, 180)
     gui.createScale(groupMin, "S", gui.fromSvar, 0, 255)
     gui.createScale(groupMin, "V", gui.fromVvar, 0, 255)
@@ -266,7 +263,7 @@ if __name__ == '__main__':
     parser.add_argument('--nthframe', help='Use only n-th frame for detection', default=1, nargs='?', type=int)
     args = parser.parse_args()
 
-    nbd = NodeBallDetection(args.nthframe, args.normalize);
+    nbd = NodeGoalDetection(args.nthframe, args.normalize);
     
     # GUI in separate thread
     thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, ))

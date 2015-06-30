@@ -29,8 +29,8 @@ class NodeBallDetection(object):
         rospy.Subscriber("/soccer/balldetection/ballPosition", String, self.callbackBallPosition, queue_size=1)
         
         # Publisher to movement
-        self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
-        self.found = rospy.Publisher("/soccer/ballsearch/found", Bool, self.foundBallCallback, queue_size=1)
+        self.move = rospy.Publisher('/soccer/movement', Twist, queue_size=10)
+        self.found = rospy.Publisher("/soccer/ballsearch/found", Bool, queue_size=1)
 
         r = rospy.Rate(5)
         

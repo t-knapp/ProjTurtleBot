@@ -43,7 +43,7 @@ class NodeCollisionDetection(object):
         self.run = True
         
         r = rospy.Rate(5)
-        while not rospy.is_shutdown() and self.run:
+        while not rospy.is_shutdown():
                 r.sleep()
 
 

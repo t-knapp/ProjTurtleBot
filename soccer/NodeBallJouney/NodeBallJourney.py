@@ -46,7 +46,7 @@ class NodeBallJourney(object):
         self.goalPosition = 0
         self.heading = 0
         self.ballMessage = BallDetectionMessage(0,0,0)
-        self.distance = [700,700,700,700,700]
+        self.distance = [0,0,0,0,0]
         self._distanceIndex = 0
 
         self.run = True
@@ -160,7 +160,7 @@ class NodeBallJourney(object):
 
     # Calculations
     def calculateLinearSpeed(self, distance, min_distance = 650, maxSpeed = 0.1):
-        x = (maxSpeed/2000 * distance) % maxSpeed
+        x = (maxSpeed/1500 * distance) + 0.1
         return maxSpeed
 
     def correctHeading(self):
