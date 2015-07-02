@@ -24,10 +24,13 @@ class InputWindow():
         self.callback = a_func
 
 class HSVGui(object):
-    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback):
+    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback, json='HSVGui.json'):
         self.setColorCallback = setColorCallback
         self.setFilterShapeCallback = setFilterShapeCallback
         self.setFilterBlurCallback = setFilterBlurCallback
+        
+        # JSON File to store/load data
+        self.json = json
         
         self.minimum = np.array([0, 0, 0],np.uint8)
         self.maximum = np.array([0, 0, 0],np.uint8)
@@ -178,7 +181,7 @@ class HSVGui(object):
         labelFrame.grid(column = column, row = row, sticky = "N")
 
     def loadList(self):
-        with open('HSVGui.json', 'r') as infile:
+        with open(self.json, 'r') as infile:
             self.listData = json.load(infile)
         infile.close()
         #print("HSVGui.loadList", self.listData)
@@ -239,7 +242,7 @@ class HSVGui(object):
         ''' Filter Blur '''
         self.listData["last"]["filterBlur"] = self.filterBlur
         
-        with open('HSVGui.json', 'w') as outfile:
+        with open(self.json, 'w') as outfile:
             json.dump(self.listData, outfile, sort_keys=True, indent=4, separators=(',', ': '))
         outfile.close();
 

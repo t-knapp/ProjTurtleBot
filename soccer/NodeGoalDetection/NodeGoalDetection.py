@@ -16,8 +16,8 @@ from kobuki_msgs.msg import ButtonEvent
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
 
-from detectBlob import DetectBlob
-from HSVGui import HSVGui
+from soccer.NodeBallDetection.detectBlob import DetectBlob
+from soccer.NodeBallDetection.HSVGui import HSVGui
 from soccer.messages.GoalDetectionMessage import GoalDetectionMessage
 
 
@@ -39,8 +39,6 @@ class NodeGoalDetection(object):
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
     rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
-    #rospy.Subscriber("/mobile_base/events/button", ButtonEvent, self.buttonListener)
-    #rospy.Subscriber("/camera/depth/image", Image, self.processDepthImage, queue_size=1)
 
     # Publisher for BallDetection
     self.msgBall = rospy.Publisher("/soccer/goalPosition", String, queue_size=1)
@@ -92,12 +90,8 @@ class NodeGoalDetection(object):
     # ToDo: Crop image with cv 'region of interest'
     keypoints = self.detectBlob.getBlobs(img)
    
-    msgBallDetection = BallDetectionMessage()
-    msgBallDetection.x = 0
-    msgBallDetection.y = 0
-    msgBallDetection.distance = 0
-    msgBallDetection.ballDetected = False
- 
+    msgGoalDetection = GoalDetectionMessage()
+    
     #TODO: Find best one?
     ''' Ideas:
     SYSA Like Boids: Calculate Center of all keypoints and assume as Ball
@@ -196,18 +190,17 @@ class NodeGoalDetection(object):
         
         # 0,0 in OpenCV is left upper corner
         # Scale values in message between 0 - 100
-        msgBallDetection.x = int((float(centerX)/ros_img.width) * 100)
-        msgBallDetection.y = abs(int((float(centerY)/ros_img.height) * 100) - 100)
-        msgBallDetection.distance = depth.astype(int)
-        msgBallDetection.ballDetected = True
-    
+        #msgGoalDetection.x = int((float(centerX)/ros_img.width) * 100)
+        #msgGoalDetection.y = abs(int((float(centerY)/ros_img.height) * 100) - 100)
+        msgGoalDetection.distance = depth.astype(int)
+        
         cv2.circle(img, (centerX,centerY), centerR, (0,0,255), 2)
 
     # Save last Message
-    self.lastFoundMsg = msgBallDetection
+    self.lastFoundMsg = msgGoalDetection
 
     # Publish BallDetectionMessage
-    self.msgBall.publish(String(msgBallDetection.toJSONString()))
+    self.msgBall.publish(String(msgGoalDetection.toJSONString()))
 
     # Display the resulting frame
     cv2.imshow("image_view", img)
@@ -216,7 +209,7 @@ class NodeGoalDetection(object):
 
 def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback);
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json');
 
     # Group min
     groupMin = gui.createLabelFrame("Goal-Detection", 0, 0);

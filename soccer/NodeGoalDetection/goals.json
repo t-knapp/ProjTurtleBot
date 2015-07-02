@@ -1,0 +1,71 @@
+{
+    "last": {
+        "filterBlur": 3,
+        "filtersShape": [
+            {
+                "activated": 0,
+                "max": 1.0,
+                "min": 0.59,
+                "name": "circularity"
+            },
+            {
+                "activated": 0,
+                "max": 1.0,
+                "min": 0.36,
+                "name": "inertia"
+            },
+            {
+                "activated": 0,
+                "max": 1.0,
+                "min": 0.77,
+                "name": "convexity"
+            }
+        ],
+        "max": [
+            26,
+            255,
+            255
+        ],
+        "min": [
+            23,
+            79,
+            166
+        ]
+    },
+    "list": [
+        {
+            "filterBlur": 3,
+            "filtersShape": [
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.59,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.36,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.77,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                26,
+                255,
+                255
+            ],
+            "min": [
+                23,
+                79,
+                166
+            ],
+            "name": "115-gelb"
+        }
+    ]
+}
