@@ -24,7 +24,7 @@ class InputWindow():
         self.callback = a_func
 
 class HSVGui(object):
-    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback, json='HSVGui.json'):
+    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback, json='HSVGui.json', title='HSV-GUI'):
         self.setColorCallback = setColorCallback
         self.setFilterShapeCallback = setFilterShapeCallback
         self.setFilterBlurCallback = setFilterBlurCallback
@@ -44,7 +44,7 @@ class HSVGui(object):
         self.filterBlur = 1       
 
         self.root = Tk()
-        self.root.wm_title("HSV Value-Chooser")
+        self.root.wm_title(title)
 
         self.fromHvar = IntVar()
         self.fromSvar = IntVar()

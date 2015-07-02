@@ -54,7 +54,7 @@ class NodeBallDetection(object):
     
     
     # How many pixels are cropped in y axis from 0 (top)
-    self.imageCrop = 200
+    self.imageCrop = 215
 
   def buttonListener(self, data):
       print("buttonListener")
@@ -194,6 +194,7 @@ class NodeBallDetection(object):
         except IndexError:
             # Ignore
             print "Error"
+            depth = 0
             pass
                 
         
@@ -219,7 +220,7 @@ class NodeBallDetection(object):
 
 def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback);
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, title="BallDetection");
 
     # Group min
     groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);

@@ -1,6 +1,6 @@
 {
     "last": {
-        "filterBlur": 3,
+        "filterBlur": 1,
         "filtersShape": [
             {
                 "activated": 0,
@@ -22,14 +22,14 @@
             }
         ],
         "max": [
-            26,
+            35,
             255,
             255
         ],
         "min": [
-            23,
-            79,
-            166
+            20,
+            52,
+            147
         ]
     },
     "list": [
@@ -66,6 +66,108 @@
                 166
             ],
             "name": "115-gelb"
+        },
+        {
+            "filterBlur": 2,
+            "filtersShape": [
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.0,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.36,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.77,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                110,
+                255,
+                255
+            ],
+            "min": [
+                104,
+                0,
+                0
+            ],
+            "name": "115-blau"
+        },
+        {
+            "filterBlur": 3,
+            "filtersShape": [
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.59,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.36,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.77,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                35,
+                255,
+                255
+            ],
+            "min": [
+                20,
+                52,
+                147
+            ],
+            "name": "115-gelb-schei\u00dfladen"
+        },
+        {
+            "filterBlur": 3,
+            "filtersShape": [
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.0,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.36,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 0,
+                    "max": 1.0,
+                    "min": 0.77,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                110,
+                254,
+                255
+            ],
+            "min": [
+                104,
+                30,
+                102
+            ],
+            "name": "115-blau-schei\u00dfverein"
         }
     ]
 }

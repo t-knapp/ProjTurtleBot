@@ -8,6 +8,7 @@ from threading import Thread
 import rospy
 import numpy as np
 import cv2
+import array
 
 import message_filters
 
@@ -25,7 +26,7 @@ class NodeGoalDetection(object):
   
   def __init__(self, nthframe=1, normalize=False, name="NodeGoalDetection"):
     rospy.init_node(name, anonymous=False)
-    rospy.loginfo("Stop detection by pressing CTRL + C")
+    rospy.loginfo("Stop goal detection by pressing CTRL + C")
     rospy.loginfo(name + " using normalization: " + str(normalize))
     rospy.loginfo(name + " using every n-th frame " + str(nthframe))
 
@@ -34,25 +35,29 @@ class NodeGoalDetection(object):
     self.cv_bridge = CvBridge()
 
     cv2.namedWindow("image_view", 1)
-    cv2.namedWindow("depth", 1)
+    #cv2.namedWindow("depth", 1)
     cv2.startWindowThread()
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
     rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
 
     # Publisher for BallDetection
-    self.msgBall = rospy.Publisher("/soccer/goalPosition", String, queue_size=1)
+    self.msgGoal = rospy.Publisher("/soccer/goalPosition", String, queue_size=1)
 
     # proceed every n-th frame from cmdline
     self.nthframe = nthframe
     self.counter = 1
-    self.depthCounter = 1
+    self.depthCounter = 1 
     
     self.normalize = normalize
     
+    # Store messages and calculate mean
+    self.msgArray = []
+    self.msgCounter = 1
+    self.msgMaxCount = 5
     
     # How many pixels are cropped in y axis from 0 (top)
-    self.imageCrop = 200
+    self.imageCrop = 215
 
   def processDepthImage(self, data):
     # only n-th image
@@ -68,7 +73,7 @@ class NodeGoalDetection(object):
     #depth = self.cv_bridge.imgmsg_to_cv2(data, "32FC1")
     #depth_array = np.array(depth, dtype=np.float32)
 
-    cv2.imshow("depth", depth)
+    #cv2.imshow("depth", depth)
     
     self.depthCounter = 1
 
@@ -90,7 +95,7 @@ class NodeGoalDetection(object):
     # ToDo: Crop image with cv 'region of interest'
     keypoints = self.detectBlob.getBlobs(img)
    
-    msgGoalDetection = GoalDetectionMessage()
+    
     
     #TODO: Find best one?
     ''' Ideas:
@@ -190,29 +195,60 @@ class NodeGoalDetection(object):
         
         # 0,0 in OpenCV is left upper corner
         # Scale values in message between 0 - 100
-        #msgGoalDetection.x = int((float(centerX)/ros_img.width) * 100)
-        #msgGoalDetection.y = abs(int((float(centerY)/ros_img.height) * 100) - 100)
-        msgGoalDetection.distance = depth.astype(int)
+        
+        self.msgArray.append((centerX, depth))
         
         cv2.circle(img, (centerX,centerY), centerR, (0,0,255), 2)
 
-    # Save last Message
-    self.lastFoundMsg = msgGoalDetection
-
-    # Publish BallDetectionMessage
-    self.msgBall.publish(String(msgGoalDetection.toJSONString()))
+    if self.msgCounter == self.msgMaxCount:
+        # Publish GoalDetectionMessage
+        msgGoalDetection = self.calculateMsg()
+        print "doit"
+        self.msgGoal.publish(String(msgGoalDetection.toJSONString()))
+        self.msgArray = []
+        self.msgCounter = 1
 
     # Display the resulting frame
     cv2.imshow("image_view", img)
     
+    self.msgCounter = self.msgCounter + 1
     self.counter = 1
+
+  def calculateMsg(self):
+    meanX = 0;
+    meanDistance = 0;
+    meanCnt = 0
+    for msg in self.msgArray:
+        if msg[0] != 0:
+            meanX = meanX + msg[0]
+            meanDistance = meanDistance + msg[1]
+            meanCnt = meanCnt + 1
+    
+    msgGoalDetection = GoalDetectionMessage()
+    
+    if meanCnt != 0:
+        centerX = meanX/meanCnt
+        meanDistance = meanDistance/meanCnt
+            
+        if centerX < 640 / 3:
+            msgGoalDetection.state = GoalDetectionMessage.STATELEFT
+        elif centerX > 640 / 3 and centerX < (640 / 3) * 2:
+            msgGoalDetection.state = GoalDetectionMessage.STATESTRAIGHT
+        else:
+            msgGoalDetection.state = GoalDetectionMessage.STATERIGHT
+        
+        msgGoalDetection.distance = meanDistance
+        #msgGoalDetection.distance = depth.astype(int)
+    return msgGoalDetection
+        
+    
 
 def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json');
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json', title='GoalDetection');
 
     # Group min
-    groupMin = gui.createLabelFrame("Goal-Detection", 0, 0);
+    groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);
     gui.createScale(groupMin, "H", gui.fromHvar, 0, 180)
     gui.createScale(groupMin, "S", gui.fromSvar, 0, 255)
     gui.createScale(groupMin, "V", gui.fromVvar, 0, 255)
