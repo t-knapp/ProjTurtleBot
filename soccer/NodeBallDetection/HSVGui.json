@@ -22,12 +22,12 @@
             }
         ],
         "max": [
-            180,
+            7,
             255,
             255
         ],
         "min": [
-            170,
+            0,
             56,
             3
         ]
@@ -406,6 +406,40 @@
                 0
             ],
             "name": "115-Match"
+        },
+        {
+            "filterBlur": 1,
+            "filtersShape": [
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.31,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.33,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.77,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                180,
+                255,
+                255
+            ],
+            "min": [
+                170,
+                56,
+                3
+            ],
+            "name": "back-up"
         }
     ]
 }

@@ -29,12 +29,19 @@ class NodeBallDetection(object):
     rospy.loginfo(name + " using normalization: " + str(normalize))
     rospy.loginfo(name + " using every n-th frame " + str(nthframe))
 
-    self.detectBlob = DetectBlob()
+    self.name = name
+
+    self.detectBlob = DetectBlob(name, (0, 790))
     
     self.cv_bridge = CvBridge()
 
-    cv2.namedWindow("image_view", 1)
-    cv2.namedWindow("depth", 1)
+    # OpenCV Windows
+    self.cv_image = self.name + " :: image"
+    cv2.namedWindow(self.cv_image, 1)
+    cv2.moveWindow(self.cv_image, 0, 490)
+    
+    self.cv_depth = self.name + " :: depth"
+    cv2.namedWindow(self.cv_depth, 1)
     cv2.startWindowThread()
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
@@ -52,12 +59,9 @@ class NodeBallDetection(object):
     
     self.normalize = normalize
     
-    
     # How many pixels are cropped in y axis from 0 (top)
     self.imageCrop = 215
 
-  def buttonListener(self, data):
-      print("buttonListener")
 
   def processDepthImage(self, data):
     # only n-th image
@@ -73,7 +77,7 @@ class NodeBallDetection(object):
     #depth = self.cv_bridge.imgmsg_to_cv2(data, "32FC1")
     #depth_array = np.array(depth, dtype=np.float32)
 
-    cv2.imshow("depth", depth)
+    cv2.imshow(self.cv_depth, depth)
     
     self.depthCounter = 1
 
@@ -214,13 +218,13 @@ class NodeBallDetection(object):
     self.msgBall.publish(String(msgBallDetection.toJSONString()))
 
     # Display the resulting frame
-    cv2.imshow("image_view", img)
+    cv2.imshow(self.cv_image, img)
     
     self.counter = 1
 
 def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, title="BallDetection");
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, title="NodeBallDetection");
 
     # Group min
     groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);

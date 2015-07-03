@@ -5,9 +5,11 @@ import cv2
 
 class DetectBlob(object):
   i=0
-  def __init__(self):
+  def __init__(self, name="detectBlob", position=(0,0)):
     self.minColor = np.array([0, 0, 0], np.uint8)
     self.maxColor = np.array([0, 0, 0], np.uint8)
+    
+    self.name = name
     
     ''' Shape-Filter '''
     circularityOpt = FilterOption("circularity")
@@ -35,7 +37,11 @@ class DetectBlob(object):
     self.params.minConvexity = 0.5
     self.params.maxConvexity = 1
 
-    cv2.namedWindow("img_inrange", 1)
+    # OpenCV windows
+    self.cv_range = self.name + " :: inrange"
+    cv2.namedWindow(self.cv_range, 1)
+    cv2.moveWindow(self.cv_range, position[0],position[1])
+    
     cv2.startWindowThread()
 
   # Callback for color adjusting, used by gui
@@ -85,7 +91,7 @@ class DetectBlob(object):
     # cv2.imwrite("/tmp/img/hsv_in_range_" + str(DetectBlob.i) + ".jpg", img_inrange)
     img_erode = cv2.erode(img_inrange, None, iterations = 3)
     img_dilate = cv2.dilate(img_erode, None, iterations = 10)
-    cv2.imshow("img_inrange", img_dilate)
+    cv2.imshow(self.cv_range, img_dilate)
     # cv2.imwrite("/tmp/img/hsv_dilate"+str(DetectBlob.i)+".jpg", img_dilate)
     DetectBlob.i += 1
     # cv2.imshow('detect ball', img_dilate)

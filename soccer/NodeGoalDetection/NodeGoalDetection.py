@@ -30,12 +30,16 @@ class NodeGoalDetection(object):
     rospy.loginfo(name + " using normalization: " + str(normalize))
     rospy.loginfo(name + " using every n-th frame " + str(nthframe))
 
-    self.detectBlob = DetectBlob()
+    self.name = name
+    self.detectBlob = DetectBlob(name, (1278, 790))
     
     self.cv_bridge = CvBridge()
 
-    cv2.namedWindow("image_view", 1)
-    #cv2.namedWindow("depth", 1)
+    # OpenCV windows
+    self.cv_image = self.name + " :: image"
+    cv2.namedWindow(self.cv_image, 1)
+    cv2.moveWindow(self.cv_image, 1278, 490)
+    
     cv2.startWindowThread()
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
@@ -95,14 +99,7 @@ class NodeGoalDetection(object):
     # ToDo: Crop image with cv 'region of interest'
     keypoints = self.detectBlob.getBlobs(img)
    
-    
-    
-    #TODO: Find best one?
-    ''' Ideas:
-    SYSA Like Boids: Calculate Center of all keypoints and assume as Ball
-    Average x , y values of all keypoints as center
-    '''
-    
+    # Calculate center    
     centerX = 0;
     centerY = 0;
     centerR = 0;
@@ -119,46 +116,6 @@ class NodeGoalDetection(object):
         centerY = centerY + y
         centerR = centerR + r
         
-        # Draw circle around ball
-        #cv2.circle(img, (x,y), r, (0,255,100), 3)
-        '''
-        try:
-            #depth = np.uint16( self.depthImage[int(item.pt[0]),int(item.pt[1])] )
-            #depth in mm
-            #TODO: Normalize: Average values in detected circle
-            
-            y_range = range(y - r/2, y + r/2)
-            x_range = range(x - r/2, x + r/2)
-            depthArray = self.depthImage[np.ix_(y_range,x_range)]
-            depthSum = 0
-            for i in range(len(depthArray)):
-                for j in range(len(depthArray[i])):
-                    depthSum = depthSum + depthArray[i][j]
-            normalizedDepth = depthSum / (len(depthArray) * len(depthArray[0]))
-            
-            #
-            # ATTENTION!
-            # OpenCV uses height in 1st index pos and width on 2nd
-            #
-            
-            #height, width = self.depthImage.shape[:2]
-            #print width, height, x, y
-            depth = normalizedDepth if self.normalize else self.depthImage[y, x]
-
-            #print("depth: %d  normalized: %d" % (depth, normalizedDepth))
-            
-            # 0,0 in OpenCV is left upper corner
-            # Scale values in message between 0 - 100
-            msgBallDetection.x = int((float(x)/ros_img.width) * 100)
-            msgBallDetection.y = abs(int((float(y)/ros_img.height) * 100) - 100)
-            msgBallDetection.distance = depth.astype(int)
-            msgBallDetection.ballDetected = True
-            '''
-        #except IndexError:
-            # Ignore
-        #    print "Error"
-        #    pass
-
 
     if len(keypoints) > 0:
         centerX = centerX / len(keypoints)
@@ -203,13 +160,12 @@ class NodeGoalDetection(object):
     if self.msgCounter == self.msgMaxCount:
         # Publish GoalDetectionMessage
         msgGoalDetection = self.calculateMsg()
-        print "doit"
         self.msgGoal.publish(String(msgGoalDetection.toJSONString()))
         self.msgArray = []
         self.msgCounter = 1
 
     # Display the resulting frame
-    cv2.imshow("image_view", img)
+    cv2.imshow(self.cv_image, img)
     
     self.msgCounter = self.msgCounter + 1
     self.counter = 1
@@ -245,7 +201,7 @@ class NodeGoalDetection(object):
 
 def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     # Create GUI
-    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json', title='GoalDetection');
+    gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json', title='NodeGoalDetection', position=(1800,0));
 
     # Group min
     groupMin = gui.createLabelFrame("HSV Min-Value", 0, 0);

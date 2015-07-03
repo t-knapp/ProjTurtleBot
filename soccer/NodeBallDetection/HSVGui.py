@@ -24,7 +24,7 @@ class InputWindow():
         self.callback = a_func
 
 class HSVGui(object):
-    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback, json='HSVGui.json', title='HSV-GUI'):
+    def __init__(self, setColorCallback, setFilterShapeCallback, setFilterBlurCallback, json='HSVGui.json', title='HSV-GUI', position=(0,0)):
         self.setColorCallback = setColorCallback
         self.setFilterShapeCallback = setFilterShapeCallback
         self.setFilterBlurCallback = setFilterBlurCallback
@@ -45,6 +45,7 @@ class HSVGui(object):
 
         self.root = Tk()
         self.root.wm_title(title)
+        self.root.geometry("+%s+%s" % position)
 
         self.fromHvar = IntVar()
         self.fromSvar = IntVar()
@@ -215,6 +216,8 @@ class HSVGui(object):
         
         for tupel in self.listData['list']:
             self.listbox.insert(END, tupel['name'])
+
+        
 
     def saveList(self):
         print("HSVGui.saveList")
