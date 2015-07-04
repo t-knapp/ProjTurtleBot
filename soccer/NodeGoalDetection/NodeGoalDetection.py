@@ -41,6 +41,9 @@ class NodeGoalDetection(object):
     cv2.moveWindow(self.cv_image, 1278, 490)
     
     cv2.startWindowThread()
+    
+    # Variables for CV Show Checkboxes
+    self.cvWindows = dict()
 
     rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
     rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
@@ -165,7 +168,8 @@ class NodeGoalDetection(object):
         self.msgCounter = 1
 
     # Display the resulting frame
-    cv2.imshow(self.cv_image, img)
+    if self.cvWindows[self.cv_image]:
+        cv2.imshow(self.cv_image, img)
     
     self.msgCounter = self.msgCounter + 1
     self.counter = 1
@@ -196,10 +200,21 @@ class NodeGoalDetection(object):
         msgGoalDetection.distance = meanDistance
         #msgGoalDetection.distance = depth.astype(int)
     return msgGoalDetection
-        
-    
 
-def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
+
+  def cvCheckBoxCallback(self, varName, varValue):
+      if self.cvWindows[varName]:
+        self.cvWindows[varName] = varValue
+        cv2.destroyWindow(varName)
+      else:
+        cv2.namedWindow(varName, 1)
+        self.cvWindows[varName] = varValue
+        if varName == self.cv_image:
+            cv2.moveWindow(self.cv_image, 1278, 490)
+        
+
+
+def guiThread(colorCallback, filterShapeCallback, filterBlurCallback, ngdObject):
     # Create GUI
     gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, json='goals.json', title='NodeGoalDetection', position=(1800,0));
 
@@ -230,6 +245,12 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     gui.initList("Speichern/Laden", 2, 0)
     gui.loadList()
 
+    # OpenCV windows checkboxes
+    cbGroup = gui.createLabelFrame("OpenCV windows", 2,1)
+    gui.createCVCheckbox(cbGroup, ngdObject.cv_image, ngdObject)
+    gui.createCVCheckbox(cbGroup, ngdObject.detectBlob.cv_range, ngdObject.detectBlob)
+
+
     # Start mainloop (blocking!)
     gui.mainloop()
 
@@ -248,10 +269,10 @@ if __name__ == '__main__':
     parser.add_argument('--nthframe', help='Use only n-th frame for detection', default=1, nargs='?', type=int)
     args = parser.parse_args()
 
-    nbd = NodeGoalDetection(args.nthframe, args.normalize);
+    ngd = NodeGoalDetection(args.nthframe, args.normalize);
     
     # GUI in separate thread
-    thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, ))
+    thread = Thread(target = guiThread, args = (ngd.detectBlob.setColors, ngd.detectBlob.setFilterShape, ngd.detectBlob.setFilterBlur, ngd))
     thread.start()
     
     rospy.spin()

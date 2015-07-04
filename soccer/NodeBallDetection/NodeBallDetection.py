@@ -63,6 +63,9 @@ class NodeBallDetection(object):
     self.imageCrop = 215
 
 
+    # Variables for CV Show Checkboxes
+    self.cvWindows = dict()
+
   def processDepthImage(self, data):
     # only n-th image
     if(self.nthframe !=0 and (self.depthCounter % self.nthframe != 0)):
@@ -77,7 +80,8 @@ class NodeBallDetection(object):
     #depth = self.cv_bridge.imgmsg_to_cv2(data, "32FC1")
     #depth_array = np.array(depth, dtype=np.float32)
 
-    cv2.imshow(self.cv_depth, depth)
+    if self.cvWindows[self.cv_depth]:
+        cv2.imshow(self.cv_depth, depth)
     
     self.depthCounter = 1
 
@@ -218,11 +222,25 @@ class NodeBallDetection(object):
     self.msgBall.publish(String(msgBallDetection.toJSONString()))
 
     # Display the resulting frame
-    cv2.imshow(self.cv_image, img)
+    if self.cvWindows[self.cv_image]:
+        cv2.imshow(self.cv_image, img)
     
     self.counter = 1
 
-def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
+
+  def cvCheckBoxCallback(self, varName, varValue):
+      
+      if self.cvWindows[varName]:
+        self.cvWindows[varName] = varValue
+        cv2.destroyWindow(varName)
+      else:
+        cv2.namedWindow(varName, 1)
+        self.cvWindows[varName] = varValue
+        if varName == self.cv_image:
+            cv2.moveWindow(self.cv_image, 0, 490)
+      
+
+def guiThread(colorCallback, filterShapeCallback, filterBlurCallback, nbdObject):
     # Create GUI
     gui = HSVGui(colorCallback, filterShapeCallback, filterBlurCallback, title="NodeBallDetection");
 
@@ -253,6 +271,12 @@ def guiThread(colorCallback, filterShapeCallback, filterBlurCallback):
     gui.initList("Speichern/Laden", 2, 0)
     gui.loadList()
 
+    # OpenCV windows checkboxes
+    cbGroup = gui.createLabelFrame("OpenCV windows", 2,1)
+    gui.createCVCheckbox(cbGroup, nbdObject.cv_image, nbdObject)
+    gui.createCVCheckbox(cbGroup, nbdObject.cv_depth, nbdObject)
+    gui.createCVCheckbox(cbGroup, nbdObject.detectBlob.cv_range, nbdObject.detectBlob)
+
     # Start mainloop (blocking!)
     gui.mainloop()
 
@@ -274,7 +298,7 @@ if __name__ == '__main__':
     nbd = NodeBallDetection(args.nthframe, args.normalize);
     
     # GUI in separate thread
-    thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, ))
+    thread = Thread(target = guiThread, args = (nbd.detectBlob.setColors, nbd.detectBlob.setFilterShape, nbd.detectBlob.setFilterBlur, nbd, ))
     thread.start()
     
     rospy.spin()

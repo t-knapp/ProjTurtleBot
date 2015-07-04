@@ -77,6 +77,8 @@ class HSVGui(object):
         ''' Filter Blur '''        
         self.rbBlurVar = IntVar()        
 
+        # OpenCV Checkboxes
+        self.cvCheckBoxes = dict()
         
     # Called if scale changes
     def onChange(self, value):
@@ -404,6 +406,21 @@ class HSVGui(object):
 	self.filterBlur = self.rbBlurVar.get()
 	
 	self.setFilterBlurCallback(self.filterBlur)
+    
+    
+    def createCVCheckbox(self, labelFrame, text, nbdObject):
+        nbdObject.cvWindows[text] = True
+        self.cvCheckBoxes[text] = BooleanVar()
+        c = Checkbutton(
+            labelFrame, 
+            text=text, 
+            variable=self.cvCheckBoxes[text],
+            onvalue=1,
+            offvalue=0,
+            command=lambda: nbdObject.cvCheckBoxCallback(text, self.cvCheckBoxes[text].get() == 1)
+        )
+        c.select()
+        c.pack()
 	
 	
 	

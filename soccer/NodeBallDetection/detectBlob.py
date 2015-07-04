@@ -42,7 +42,21 @@ class DetectBlob(object):
     cv2.namedWindow(self.cv_range, 1)
     cv2.moveWindow(self.cv_range, position[0],position[1])
     
+    self.cvWindows = dict()
+    self.position = position
+    
     cv2.startWindowThread()
+
+  def cvCheckBoxCallback(self, varName, varValue):
+      if self.cvWindows[varName]:
+        self.cvWindows[varName] = varValue
+        cv2.destroyWindow(varName)
+      else:
+        cv2.namedWindow(varName, 1)
+        self.cvWindows[varName] = varValue
+        if varName == self.cv_range:
+            cv2.moveWindow(self.cv_range, self.position[0], self.position[1])
+
 
   # Callback for color adjusting, used by gui
   def setColors(self, minColor, maxColor):
@@ -91,7 +105,10 @@ class DetectBlob(object):
     # cv2.imwrite("/tmp/img/hsv_in_range_" + str(DetectBlob.i) + ".jpg", img_inrange)
     img_erode = cv2.erode(img_inrange, None, iterations = 3)
     img_dilate = cv2.dilate(img_erode, None, iterations = 10)
-    cv2.imshow(self.cv_range, img_dilate)
+    
+    if self.cvWindows[self.cv_range]:
+        cv2.imshow(self.cv_range, img_dilate)
+    
     # cv2.imwrite("/tmp/img/hsv_dilate"+str(DetectBlob.i)+".jpg", img_dilate)
     DetectBlob.i += 1
     # cv2.imshow('detect ball', img_dilate)
