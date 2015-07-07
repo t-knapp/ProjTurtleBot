@@ -16,7 +16,7 @@ from std_msgs.msg import Bool
 
 from geometry_msgs.msg import Twist
 from kobuki_msgs.msg import BumperEvent
-
+from kobuki_msgs.msg import WheelDropEvent
 
 from soccer.messages.BallDetectionMessage import BallDetectionMessage
 
@@ -35,6 +35,10 @@ class NodeCollisionDetection(object):
         rospy.Subscriber('/mobile_base/events/bumper', BumperEvent, self.collisionHandler)
         # Subscribe to Referee Events
         rospy.Subscriber('soccer/referee', Bool, self.refereeHandler)
+
+
+        rospy.Subscriber('/mobile_base/events/wheel_drop', WheelDropEvent, self.wheel_drop_callback)
+
         # Publisher to movement
         self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
         
@@ -83,6 +87,27 @@ class NodeCollisionDetection(object):
     
     def unsubscribe(self):
         self.movement_sub.unregister()
+
+    def wheel_drop_callback(selfs, msg):
+        self.lock.acquire()
+        if self.noCollision:
+            self.noCollision = False
+            if msg.state != WheelDropEvent.RAISED and self.run:
+                self.unsubscribe()
+                t = Twist()
+                t.linear.x = -self.LINEAR_SPEED
+                if msg.bumper == 0: # LEFT Bumper
+                    t.angular.z = self.ANGULAR_SPEED
+                if msg.bumper == 2: # RIGHT Bumper
+                    t.angular.z = -self.ANGULAR_SPEED
+
+                for x in range(0,5):
+                    self.move.publish(t)
+                    time.sleep(0.1)
+                self.subscribe()
+            self.noCollision = True
+            self.lock.release()
+
 
 if __name__ == '__main__':
     NodeCollisionDetection()
