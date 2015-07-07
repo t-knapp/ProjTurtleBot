@@ -88,7 +88,7 @@ class NodeCollisionDetection(object):
     def unsubscribe(self):
         self.movement_sub.unregister()
 
-    def wheel_drop_callback(selfs, msg):
+    def wheel_drop_callback(self, msg):
         self.lock.acquire()
         if self.noCollision:
             self.noCollision = False
