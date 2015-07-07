@@ -17,10 +17,15 @@ from soccer.messages.GoalDetectionMessage import GoalDetectionMessage as GDM
 from geometry_msgs.msg import Twist
 from std_msgs.msg import Bool
 
+SPEED = 1.55
+
+DRIVE_LENGTH = 20 # in steps
+TURN = 3
 
 
 class NodeKick(object):
-    
+
+
     
     def __init__(self, name="NodeKick"):
         
@@ -49,20 +54,9 @@ class NodeKick(object):
                     self.run = False
                     self.kick = False
                     if self.goal.state == GDM.STATESTRAIGHT or self.goal.state == GDM.STATENONE:
-                        self.move_cmd.linear.x = 1.5
                         i = 0
-                        while  i < 15:
-                            i = i+1
-                            self.cmd_vel.publish(self.move_cmd)
-                            r.sleep()
-                        i = 0
-                        self.move_cmd.linear.x = -1
-                        while i<3:
-                            i = i+1
-                            self.cmd_vel.publish(self.move_cmd)
-                            r.sleep()
-                        self.move_cmd.linear.x = 0
-                        self.cmd_vel.publish(self.move_cmd)
+                        #NOthing to do here
+
 
                     if self.goal.state == GDM.STATERIGHT:
                         self.move_cmd.linear.x = 0.2
@@ -80,6 +74,23 @@ class NodeKick(object):
                             self.cmd_vel.publish(self.move_cmd)
                             r.sleep()
 
+                    # KICK
+                    self.move_cmd.linear.x = SPEED
+                        i = 0
+                        while  i < DRIVE_LENGTH:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
+
+                    # Move Back
+                    i = 0
+                    self.move_cmd.linear.x = -SPEED
+                        while i<3:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
+                        self.move_cmd.linear.x = 0
+                        self.cmd_vel.publish(self.move_cmd)
                     self.finished.publish(True)
 
 
