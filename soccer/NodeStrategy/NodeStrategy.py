@@ -32,20 +32,36 @@ class NodeStrategy(object):
         # Subscribe to SearchEvents
         rospy.Subscriber("/soccer/ballsearch/found", Bool, self.foundBallCallback, queue_size=1)
         rospy.Subscriber("/soccer/lostBall", String, self.lostBallCallback, queue_size=1)
-        rospy.Subscriber("/soccer/balljourney/finished", String, self.journeyFinished, queue_size=1)
+        rospy.Subscriber("/soccer/balljourney/finished", Bool, self.journeyFinished, queue_size=1)
+        rospy.Subscriber("/soccer/kick/finished", Bool, self.kickFinishedCallback, queue_size=1)
 
-
-        # Publisher to movement
+        # Publisher to BodeBallJourney
         self.journey = rospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
+        
+        # Publisher to NodeGoalDetection
+        self.pubGoalDetection = rospy.Publisher("/soccer/goaldetection/run", Bool, queue_size=1)
+        
+        # Publisher to NodeKick
+        self.pubKick = rospy.Publisher("/soccer/kick/run", Bool, queue_size=1)
+        
 
 
         self.state = LOST_BALL
         r = rospy.Rate(5)
         while not rospy.is_shutdown():
+            
             if self.state == LOST_BALL:
                 self.setState(SEARCH)
+                # Blocking Call to NodeBallSearch
+                call(["NodeBallSearch", "--num", "5"])
+                
+                #            elif self.state == DRIVE:
+                # Blocking Call to NodeBallJourney
+                #call(["NodeBallJourney"])
+            
+            
+            print "Strategy::Loop"    
             r.sleep()
-# ToDo: Start Ballsearch Node
 
 
 ################################################################################
@@ -59,27 +75,35 @@ class NodeStrategy(object):
         self.setState(LOST_BALL)
         self.journey.publish(False)
 
-    def journeyFinished(self,data):
+    def journeyFinished(self, data):
+        print "Journey finished"
+        self.journey.publish(False)
+        self.pubKick.publish(True)
+        self.pubGoalDetection.publish(True)
         self.setState(KICK)
-
+        
+    def kickFinishedCallback(self, data):
+        self.pubGoalDetection.publish(False)
+        self.pubKick.publish(False)
+        self.setState(LOST_BALL)
 
 ################################################################################
 # debug stuff
 
-def setState(self, state):
-    if(state != self.state):
-        print "New State = " + sting(state)
-        self.state = state
+    def setState(self, state):
+        if(state != self.state):
+            print "New State = " + self.string(state)
+            self.state = state
 
-def string(self,state)
-    if state == 1
-        return "SEARCH"
-    if state == 2
-        return "LOST BALL"
-    if state == 10
-        return "DRIVE"
-    if state == 20
-        return "KICK"
+    def string(self,state):
+        if state == 1:
+            return "SEARCH"
+        if state == 2:
+            return "LOST BALL"
+        if state == 10:
+            return "DRIVE"
+        if state == 20:
+            return "KICK"
 
 if __name__ == '__main__':
 

@@ -10,54 +10,80 @@ import numpy
 from math import radians
 import random
 import math
-import time
+from time import sleep
+from kobuki_msgs.msg import Sound
 
-
-#from messages.GoalDetectionMessage import GoalDetectionMessage as GDM
+from soccer.messages.GoalDetectionMessage import GoalDetectionMessage as GDM
 from geometry_msgs.msg import Twist
+from std_msgs.msg import Bool
 
 
 
-class NodeBallJourney(object):
+class NodeKick(object):
     
     
-    def __init__(self, name="NodeBallJourney"):
+    def __init__(self, name="NodeKick"):
         
         rospy.init_node(name, anonymous=False)
-        rospy.loginfo("Stop detection by pressing CTRL + C")
+        rospy.loginfo("Stop kick by pressing CTRL + C")
         
-#        rospy.Subscriber("/soccer/goalDetection/??", String, self.detectionCallBack, queue_size = 1)
+        rospy.Subscriber("/soccer/goalPosition", String, self.detectionCallBack, queue_size = 1)
+        self.sound = rospy.Publisher('/mobile_base/commands/sound',Sound, queue_size=1)
+        # Signal from NodeStrategy
+        rospy.Subscriber("/soccer/kick/run", Bool, self.runCallback, queue_size=1)
+
+        # Publish to NodeCollisionDetection to move
         self.cmd_vel = rospy.Publisher('/soccer/movement', Twist, queue_size=1)
-
-        move_cmd = Twist()
-        move_cmd.angular.z = 0
-        move_cmd.linear.x = 0
-        
-        self.kick = True
-        self.run = True
+        self.finished = rospy.Publisher("/soccer/kick/finished", Bool, queue_size=1)
+        self.move_cmd = Twist()
+        self.move_cmd.angular.z = 0
+        self.move_cmd.linear.x = 0
+    
+        self.run = False
+        self.kick = False
         r = rospy.Rate(10)
+        while not rospy.is_shutdown():
+            while self.run:
+                while self.kick:
+                    self.sound.publish(Sound(Sound.CLEANINGSTART))
+                    self.run = False
+                    self.kick = False
+                    if self.goal.state == GDM.STATESTRAIGHT or self.goal.state == GDM.STATENONE:
+                        self.move_cmd.linear.x = 1.5
+                        i = 0
+                        while  i < 15:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
+                        i = 0
+                        self.move_cmd.linear.x = -1
+                        while i<3:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
+                        self.move_cmd.linear.x = 0
+                        self.cmd_vel.publish(self.move_cmd)
 
-        while(not rospy.is_shutdown() and self.run):
-            while (self.kick):
-                self.run = False
-                self.kick = False
-#                if True:# or self.goal.status == GDM.STATESTRAIGHT:
-                move_cmd.linear.x = 3
-                
-                i = 0
-                while  i < 5:
-                    i = i+1
-                    self.cmd_vel.publish(move_cmd)
-                    r.sleep()
-                i = 0
-                #move_cmd.linear.x = -1
-                while i<3:
-                    i = i+1
-                    self.cmd_vel.publish(move_cmd)
-                    r.sleep()
-    
-    
+                    if self.goal.state == GDM.STATERIGHT:
+                        self.move_cmd.linear.x = 0.2
+                        i = 0
+                        while  i < 5:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
 
+                    if self.goal.state == GDM.STATELEFT:
+                        self.move_cmd.linear.x = 0.2
+                        i = 0
+                        while  i < 5:
+                            i = i+1
+                            self.cmd_vel.publish(self.move_cmd)
+                            r.sleep()
+
+                    self.finished.publish(True)
+
+
+    
 
 
 
@@ -67,10 +93,14 @@ class NodeBallJourney(object):
 # CALLBACKS
 
     def detectionCallBack(self, msg):
-        #self.goal = GDM.fromJSONString(msg.data)
-        self.kick = True
+            self.goal = GDM.fromJSONString(msg.data)
+            print msg.data
+            self.kick = True
 
+    def runCallback(self, msg):
+        self.run = msg.data
 
 
 if __name__ == '__main__':
-    NodeBallJourney()
+    NodeKick()
+    rospy.spin()

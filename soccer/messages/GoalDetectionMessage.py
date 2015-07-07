@@ -14,10 +14,11 @@ distance     - tells the distance in mm to the goal
 
 class GoalDetectionMessage:
     
-    STATENONE     = 0
+    STATEERROR     = 0
     STATELEFT     = 1
     STATERIGHT    = 2
     STATESTRAIGHT = 4
+    STATENONE     = 8
     
     def __init__(self, state= STATENONE, distance= 0):
         self.state = state

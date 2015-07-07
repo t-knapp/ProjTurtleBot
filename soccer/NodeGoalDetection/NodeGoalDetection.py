@@ -16,6 +16,7 @@ from cv_bridge import CvBridge
 from kobuki_msgs.msg import ButtonEvent
 from sensor_msgs.msg import Image
 from std_msgs.msg import String
+from std_msgs.msg import Bool
 
 from soccer.NodeBallDetection.detectBlob import DetectBlob
 from soccer.NodeBallDetection.HSVGui import HSVGui
@@ -24,12 +25,13 @@ from soccer.messages.GoalDetectionMessage import GoalDetectionMessage
 
 class NodeGoalDetection(object):
   
-  def __init__(self, nthframe=1, normalize=False, name="NodeGoalDetection"):
+  def __init__(self, nthframe=1, normalize=False, calibrate=False, name="NodeGoalDetection"):
     rospy.init_node(name, anonymous=False)
     rospy.loginfo("Stop goal detection by pressing CTRL + C")
     rospy.loginfo(name + " using normalization: " + str(normalize))
     rospy.loginfo(name + " using every n-th frame " + str(nthframe))
 
+    self.calibrate = calibrate
     self.name = name
     self.detectBlob = DetectBlob(name, (1278, 790))
     
@@ -45,8 +47,11 @@ class NodeGoalDetection(object):
     # Variables for CV Show Checkboxes
     self.cvWindows = dict()
 
-    rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
-    rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
+    self.subImage = rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
+    self.subDepth = rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
+    
+    # Subscriber for Application-Logic
+    rospy.Subscriber("/soccer/goaldetection/run", Bool, self.runCallback, queue_size=1)
 
     # Publisher for BallDetection
     self.msgGoal = rospy.Publisher("/soccer/goalPosition", String, queue_size=1)
@@ -65,6 +70,18 @@ class NodeGoalDetection(object):
     
     # How many pixels are cropped in y axis from 0 (top)
     self.imageCrop = 215
+
+  def runCallback(self, data):
+      print "### SUB,  " + str(data.data)
+      if data.data:
+          self.subImage = rospy.Subscriber("/camera/rgb/image_rect_color", Image, self.processImages, queue_size=1)
+          self.subDepth = rospy.Subscriber("/camera/depth/image_raw", Image, self.processDepthImage, queue_size=1)
+      else:
+          self.unsubscribe()
+
+  def unsubscribe(self):
+      self.subImage.unregister()
+      self.subDepth.unregister()
 
   def processDepthImage(self, data):
     # only n-th image
@@ -166,6 +183,10 @@ class NodeGoalDetection(object):
         self.msgGoal.publish(String(msgGoalDetection.toJSONString()))
         self.msgArray = []
         self.msgCounter = 1
+        
+        if not self.calibrate:
+            # Set in 'standby' mode
+            self.unsubscribe()
 
     # Display the resulting frame
     if self.cvWindows[self.cv_image]:
@@ -267,9 +288,10 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--normalize', help='Normalize depth values using points in detected ball\'s area (square based)', default=False, action='store_true')
     parser.add_argument('--nthframe', help='Use only n-th frame for detection', default=1, nargs='?', type=int)
+    parser.add_argument('-c', '--calibrate', help='Ignore event-based behavior ("/soccer/goaldetection/run") and just run.', default=False, action='store_true')
     args = parser.parse_args()
 
-    ngd = NodeGoalDetection(args.nthframe, args.normalize);
+    ngd = NodeGoalDetection(args.nthframe, args.normalize, args.calibrate);
     
     # GUI in separate thread
     thread = Thread(target = guiThread, args = (ngd.detectBlob.setColors, ngd.detectBlob.setFilterShape, ngd.detectBlob.setFilterBlur, ngd))

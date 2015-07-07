@@ -210,6 +210,7 @@ class NodeBallDetection(object):
         # Scale values in message between 0 - 100
         msgBallDetection.x = int((float(centerX)/ros_img.width) * 100)
         msgBallDetection.y = abs(int((float(centerY)/ros_img.height) * 100) - 100)
+        #print type(depth)
         msgBallDetection.distance = depth.astype(int)
         msgBallDetection.ballDetected = True
     

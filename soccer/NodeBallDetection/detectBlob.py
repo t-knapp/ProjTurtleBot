@@ -5,11 +5,12 @@ import cv2
 
 class DetectBlob(object):
   i=0
-  def __init__(self, name="detectBlob", position=(0,0)):
+  def __init__(self, name="detectBlob", position=(0,0), detectExtraRed=False):
     self.minColor = np.array([0, 0, 0], np.uint8)
     self.maxColor = np.array([0, 0, 0], np.uint8)
     
     self.name = name
+    self.detectExtraRed = detectExtraRed
     
     ''' Shape-Filter '''
     circularityOpt = FilterOption("circularity")
@@ -41,6 +42,9 @@ class DetectBlob(object):
     self.cv_range = self.name + " :: inrange"
     cv2.namedWindow(self.cv_range, 1)
     cv2.moveWindow(self.cv_range, position[0],position[1])
+    
+    #cv2.namedWindow("debug", 1)
+    #cv2.namedWindow("or", 1)
     
     self.cvWindows = dict()
     self.position = position
@@ -99,21 +103,37 @@ class DetectBlob(object):
     img_hsv = cv2.cvtColor(img_blur,cv2.COLOR_BGR2HSV)
     # rospy.loginfo(img_hsv[320][240])
     
+    # Find selected colors in gui
     img_inrange = cv2.inRange(img_hsv, self.minColor, self.maxColor)
-    #cv2.imshow("img_inrange", img_inrange)
     
     # cv2.imwrite("/tmp/img/hsv_in_range_" + str(DetectBlob.i) + ".jpg", img_inrange)
-    img_erode = cv2.erode(img_inrange, None, iterations = 3)
-    img_dilate = cv2.dilate(img_erode, None, iterations = 10)
+    #img_erode_gui = cv2.erode(img_inrange, None, iterations = 3)
+    #img_dilate_gui = cv2.dilate(img_erode_gui, None, iterations = 10)
+    
+    # TODO: Switch for GoalDetection
+    # Find selected colors 0 - 15
+    img_inrange_red = cv2.inRange(img_hsv, np.array([0, 5, 0], np.uint8), np.array([15, 255, 255], np.uint8))
+
+    #img_erode_red = cv2.erode(img_inrange_red, None, iterations = 3)
+    #img_dilate_red = cv2.dilate(img_erode_red, None, iterations = 10)
+    
+    #cv2.imshow("debug", img_dilate_red)
+    
+    img_or = cv2.bitwise_or(img_inrange, img_inrange_red)
+    
+    img_erode_or = cv2.erode(img_or, None, iterations = 3)
+    img_dilate_or = cv2.dilate(img_erode_or, None, iterations = 3)
+    
+    #cv2.imshow("or", img_dilate_or)
     
     if self.cvWindows[self.cv_range]:
-        cv2.imshow(self.cv_range, img_dilate)
+        cv2.imshow(self.cv_range, img_dilate_or)
     
     # cv2.imwrite("/tmp/img/hsv_dilate"+str(DetectBlob.i)+".jpg", img_dilate)
     DetectBlob.i += 1
     # cv2.imshow('detect ball', img_dilate)
 
-    return img_dilate
+    return img_dilate_or
   
   def doBlurFiltering(self, img):
     if(self.filterBlur == 1):
@@ -131,7 +151,7 @@ class DetectBlob(object):
     keypoints = detector.detect(binary)
 
     keypoints.sort(self.compKeypoint)
-    keypoints = self.throwOutSmallBlobs(keypoints, 15) #30
+    keypoints = self.throwOutSmallBlobs(keypoints, 10) #30
     
     im_with_keypoints = cv2.drawKeypoints(img, keypoints, np.array([]), (0,0,255), cv2.DRAW_MATCHES_FLAGS_DRAW_RICH_KEYPOINTS)
     # cv2.imwrite("/tmp/img/key_"+str(DetectBlob.i)+".jpg", im_with_keypoints)
