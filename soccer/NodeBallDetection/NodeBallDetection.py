@@ -31,7 +31,7 @@ class NodeBallDetection(object):
 
     self.name = name
 
-    self.detectBlob = DetectBlob(name, (0, 790))
+    self.detectBlob = DetectBlob(name, (0, 790), detectExtraRed=True)
     
     self.cv_bridge = CvBridge()
 

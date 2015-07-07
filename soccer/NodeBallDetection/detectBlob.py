@@ -110,30 +110,27 @@ class DetectBlob(object):
     #img_erode_gui = cv2.erode(img_inrange, None, iterations = 3)
     #img_dilate_gui = cv2.dilate(img_erode_gui, None, iterations = 10)
     
-    # TODO: Switch for GoalDetection
-    # Find selected colors 0 - 15
-    img_inrange_red = cv2.inRange(img_hsv, np.array([0, 5, 0], np.uint8), np.array([15, 255, 255], np.uint8))
-
-    #img_erode_red = cv2.erode(img_inrange_red, None, iterations = 3)
-    #img_dilate_red = cv2.dilate(img_erode_red, None, iterations = 10)
+    img_or = img_inrange
     
-    #cv2.imshow("debug", img_dilate_red)
+    if self.detectExtraRed:
+        # Find selected colors 0 - 15
+        img_inrange_red = cv2.inRange(img_hsv, np.array([0, 20, 10], np.uint8), np.array([15, 255, 255], np.uint8))
+        
+        img_or = cv2.bitwise_or(img_inrange, img_inrange_red)
     
-    img_or = cv2.bitwise_or(img_inrange, img_inrange_red)
-    
-    img_erode_or = cv2.erode(img_or, None, iterations = 3)
-    img_dilate_or = cv2.dilate(img_erode_or, None, iterations = 3)
+    img_erode = cv2.erode(img_or, None, iterations = 3)
+    img_dilate = cv2.dilate(img_erode, None, iterations = 3)
     
     #cv2.imshow("or", img_dilate_or)
     
     if self.cvWindows[self.cv_range]:
-        cv2.imshow(self.cv_range, img_dilate_or)
+        cv2.imshow(self.cv_range, img_dilate)
     
     # cv2.imwrite("/tmp/img/hsv_dilate"+str(DetectBlob.i)+".jpg", img_dilate)
     DetectBlob.i += 1
     # cv2.imshow('detect ball', img_dilate)
 
-    return img_dilate_or
+    return img_dilate
   
   def doBlurFiltering(self, img):
     if(self.filterBlur == 1):

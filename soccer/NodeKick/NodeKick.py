@@ -76,21 +76,22 @@ class NodeKick(object):
 
                     # KICK
                     self.move_cmd.linear.x = SPEED
-                        i = 0
-                        while  i < DRIVE_LENGTH:
-                            i = i+1
-                            self.cmd_vel.publish(self.move_cmd)
-                            r.sleep()
+                    i = 0
+                    while  i < DRIVE_LENGTH:
+                        i = i+1
+                        self.cmd_vel.publish(self.move_cmd)
+                        r.sleep()
 
                     # Move Back
                     i = 0
                     self.move_cmd.linear.x = -SPEED
-                        while i<3:
-                            i = i+1
-                            self.cmd_vel.publish(self.move_cmd)
-                            r.sleep()
-                        self.move_cmd.linear.x = 0
+                    while i<3:
+                        i = i+1
                         self.cmd_vel.publish(self.move_cmd)
+                        r.sleep()
+                    
+                    self.move_cmd.linear.x = 0
+                    self.cmd_vel.publish(self.move_cmd)
                     self.finished.publish(True)
 
 

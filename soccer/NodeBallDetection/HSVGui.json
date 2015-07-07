@@ -3,19 +3,19 @@
         "filterBlur": 1,
         "filtersShape": [
             {
-                "activated": 0,
-                "max": 0.99,
+                "activated": 1,
+                "max": 1.0,
                 "min": 0.22,
                 "name": "circularity"
             },
             {
-                "activated": 0,
+                "activated": 1,
                 "max": 1.0,
                 "min": 0.33,
                 "name": "inertia"
             },
             {
-                "activated": 0,
+                "activated": 1,
                 "max": 1.0,
                 "min": 0.44,
                 "name": "convexity"
@@ -27,9 +27,9 @@
             255
         ],
         "min": [
-            150,
-            23,
-            8
+            149,
+            20,
+            10
         ]
     },
     "list": [
@@ -542,6 +542,74 @@
                 0
             ],
             "name": "THIS IS SPARTA!"
+        },
+        {
+            "filterBlur": 1,
+            "filtersShape": [
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.22,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.33,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.44,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                180,
+                255,
+                255
+            ],
+            "min": [
+                149,
+                20,
+                10
+            ],
+            "name": "yannic"
+        },
+        {
+            "filterBlur": 1,
+            "filtersShape": [
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.22,
+                    "name": "circularity"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.33,
+                    "name": "inertia"
+                },
+                {
+                    "activated": 1,
+                    "max": 1.0,
+                    "min": 0.44,
+                    "name": "convexity"
+                }
+            ],
+            "max": [
+                180,
+                255,
+                255
+            ],
+            "min": [
+                149,
+                20,
+                10
+            ],
+            "name": "mensa"
         }
     ]
 }
