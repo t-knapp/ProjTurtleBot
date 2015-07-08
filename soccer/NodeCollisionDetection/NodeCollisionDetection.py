@@ -96,11 +96,6 @@ class NodeCollisionDetection(object):
                 self.unsubscribe()
                 t = Twist()
                 t.linear.x = -self.LINEAR_SPEED
-                if msg.bumper == 0: # LEFT Bumper
-                    t.angular.z = self.ANGULAR_SPEED
-                if msg.bumper == 2: # RIGHT Bumper
-                    t.angular.z = -self.ANGULAR_SPEED
-
                 for x in range(0,5):
                     self.move.publish(t)
                     time.sleep(0.1)

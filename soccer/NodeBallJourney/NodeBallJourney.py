@@ -25,12 +25,12 @@ OPPOSITE_HEADING_TURN_DONE = 7
 COMPLETE = 10
 LOST_BALL = 99
 
-MIN_LINEAR_SPEED = 0.2
-MAX_LINEAR_SPEED = 0.3
+MIN_LINEAR_SPEED = 0.3
+MAX_LINEAR_SPEED = 0.35
 MIN_ANGULAR_SPEED = 0.33
 MAX_ANGLUAR_SPEED = 1
 
-MIN_DISTANCE = 400
+MIN_DISTANCE = 650
 
 
 class NodeBallJourney(object):
@@ -100,7 +100,7 @@ class NodeBallJourney(object):
                         move_cmd.angular.z = 0
                         print "STRAIGHT"
                         i = 0
-                        while self.lostBall < 90 or i < 100:
+                        while self.lostBall < 50 or i < 100:
                             self.cmd_vel.publish(move_cmd)
                             i = i+1
                             r.sleep()
@@ -170,7 +170,7 @@ class NodeBallJourney(object):
         if distance < MIN_DISTANCE:
             return 0
         x = (maxSpeed/2000 * distance) + 0.1
-        return x
+        return maxSpeed
 
     def correctHeading(self):
         return self.heading < 0.75
