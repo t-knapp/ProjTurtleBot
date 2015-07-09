@@ -23,7 +23,13 @@ LOST_BALL = 2
 DRIVE = 10
 KICK = 20
 
+'''
+SpielstrategieNode
 
+Speichert aktuellen Status, startet andere Nodes
+
+ALS LETZTE NODE STARTEN, WENN ALLE ANDEREN LAUFEN!
+'''
 class NodeStrategy(object):
     
     def __init__(self,name="NodeStrategy"):

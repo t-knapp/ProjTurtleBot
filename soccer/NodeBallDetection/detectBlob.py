@@ -3,6 +3,22 @@ import numpy as np
 from FilterOption import *
 import cv2
 
+'''
+Ur-Version von Team BaloonTerminator
+
+Erweiterung / Optimierung / Anpassung durch Team Böing
+
+
+Parameter self.detectExtraRed beachten!
+   Da rot im HSV Farbraum bei 0° und 360° (in OpenCV bei 180°) liegt,
+   sind zwei Erkennungsschritte (cv2.inrange(min, max)) notwendig.
+   Dieser Parameter bestimmt ob zum im GUI eingestellten Wert
+   noch der Bereich um 0° - 15° erkannt werden soll.
+   Beide erkannten Bilder werden verbunden. Führt zu exzellenter
+   Ballerkennung für roten Ball!
+   In NodeBallDetection auf True
+   In NodeGoalDetection auf False
+'''
 class DetectBlob(object):
   i=0
   def __init__(self, name="detectBlob", position=(0,0), detectExtraRed=False):

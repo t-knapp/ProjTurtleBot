@@ -32,7 +32,12 @@ MAX_ANGLUAR_SPEED = 1
 
 MIN_DISTANCE = 650
 
+'''
+Anfahrt an den Ball
 
+Wacht auf, wenn auf Topic "/soccer/balljourney/run" True gesendet wurde
+Schläft ein, wenn False gesendet wurde.
+'''
 class NodeBallJourney(object):
     
     

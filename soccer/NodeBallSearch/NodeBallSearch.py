@@ -19,6 +19,17 @@ from soccer.messages.BallDetectionMessage import BallDetectionMessage
 STATE_TURN = 1
 STATE_MOVE = 2
 
+'''
+Sucht den Ball.
+
+Benötigt NodeBallDetection
+
+Terminiert, wenn Ball gefunden
+
+CMD-Line Parameter:
+--num N    Nach N 'Ball-gefunden' Nachrichten stoppt die Suche (Minimierung false positives)
+'''
+
 class NodeBallDetection(object):
     
     def __init__(self, numFoundsInSequence=1, turnLeft=False, name="NodeBallSearch"):

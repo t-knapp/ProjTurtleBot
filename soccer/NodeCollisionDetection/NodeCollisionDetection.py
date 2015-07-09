@@ -20,7 +20,15 @@ from kobuki_msgs.msg import WheelDropEvent
 
 from soccer.messages.BallDetectionMessage import BallDetectionMessage
 
+'''
+Zwischenschicht für die Bewegung.
 
+Alle Nodes, die Bewegungen ausführen melden sich bei CollisionDetection.
+Diese Node leitet an den Roboter weiter, wenn NodeReferee dies erlaubt.
+
+Bumper-Kontakte und Wheeldrop-Events übersteuern die von anderen Nodes 
+übergebenen Bewegungsbefehle.
+'''
 class NodeCollisionDetection(object):
     
     LINEAR_SPEED = 0.3

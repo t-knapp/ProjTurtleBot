@@ -20,6 +20,19 @@ from detectBlob import DetectBlob
 from HSVGui import HSVGui
 from soccer.messages.BallDetectionMessage import BallDetectionMessage
 
+'''
+Erkennt im Kinect Kamera Bild zusammenhängende farbige Bereicht (Ball).
+HSV Farbwerte über Slider in der GUI definierbar.
+Operationen auf den Bildern mit OpenCV 2
+Tiefenbild enthält Abstände in mm
+Zu prozessierendes Bild wird beschnitten um Fehler (Farben überhalb 
+der Bande => Außerhalb des Spielfeldes) zu ignorieren
+OpenCV Fenster ein/ausblendbar
+
+CMD-Line Parameter:
+--normalize    Tiefe wird aus mehreren Punkten im Tiefenbild berechnet (weniger Rauschen, bessere Genauigkeit)
+--nthframe N   Nur jedes N-te Bild verarbeiten (Für langsame HW)
+'''
 
 class NodeBallDetection(object):
   
