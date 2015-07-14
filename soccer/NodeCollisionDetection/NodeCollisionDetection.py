@@ -37,7 +37,7 @@ class NodeCollisionDetection(object):
         rospy.Subscriber('soccer/referee', Bool, self.refereeHandler)
 
 
-        rospy.Subscriber('/mobile_base/events/wheel_drop', WheelDropEvent, self.wheel_drop_callback)
+#        rospy.Subscriber('/mobile_base/events/wheel_drop', WheelDropEvent, self.wheel_drop_callback)
 
         # Publisher to movement
         self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)

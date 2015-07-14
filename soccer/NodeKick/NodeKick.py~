@@ -92,7 +92,6 @@ class NodeKick(object):
                         self.cmd_vel.publish(self.move_cmd)
                         r.sleep()
                     
-                    print "Kick Done"                
                     self.move_cmd.linear.x = 0
                     self.cmd_vel.publish(self.move_cmd)
                     self.finished.publish(True)
@@ -115,9 +114,9 @@ class NodeKick(object):
     def runCallback(self, msg):
         self.run = msg.data
 
-    def collisionHandler(self, msg):
-        if msg.state == BumperEvent.PRESSED and self.run :
-	    self.kick = False
+     def collisionHandler(self, msg):
+         if msg.state != BumperEvent.PRESSED:
+		self.kick = False:
 
 if __name__ == '__main__':
     NodeKick()

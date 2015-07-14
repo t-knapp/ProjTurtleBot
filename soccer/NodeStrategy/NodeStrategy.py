@@ -60,7 +60,7 @@ class NodeStrategy(object):
                 #call(["NodeBallJourney"])
             
             
-            print "Strategy::Loop"    
+            #print "Strategy::Loop"    
             r.sleep()
 
 
