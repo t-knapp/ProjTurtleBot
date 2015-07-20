@@ -38,3 +38,12 @@ Then run:
 ```$ NodeStrategy```    
 
 
+## Ignore Lid Closing
+The following instructions allow the closing of the lid without suspending.
+
+1. Open the following file ```/etc/systemd/logind.conf```:  
+        ```$ sudo -H gedit /etc/systemd/logind.conf```
+2. Add the following file:  
+         ```HandleLidSwitch=ignore```   
+3. Restart the systemd daemon with this command:   
+         ```$ sudo restart systemd-logind```
