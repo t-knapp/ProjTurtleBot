@@ -10,6 +10,20 @@ author    t.knapp
 version   20150624-1
 '''
 
+'''
+Schnittstelle zwischen Schiedsrichter-App und ROS-Welt.
+
+Horcht auf UDP-Port 4711 (ACHTUNG FIREWALL!)
+
+Publiziert Bool auf 'soccer/referee'
+- True  : Start/Spiel läuft
+- False : Stopp/Spiel unterbrechen
+
+CMDLINE:
+-v   verbose mode
+
+Entwickelt von Team Böing, weitergegeben an Team Grunwald
+'''
 class Handler(BaseRequestHandler):
     
     def handle(self):

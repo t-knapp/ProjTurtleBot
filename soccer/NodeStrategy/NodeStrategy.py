@@ -24,6 +24,14 @@ DRIVE = 10
 KICK = 20
 COLLISION = 40
 
+'''
+SpielstrategieNode
+>>>>>>> master
+
+Speichert aktuellen Status, startet andere Nodes
+
+ALS LETZTE NODE STARTEN, WENN ALLE ANDEREN LAUFEN!
+'''
 class NodeStrategy(object):
     
     def __init__(self,name="NodeStrategy"):

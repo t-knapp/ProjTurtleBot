@@ -22,7 +22,11 @@ SPEED = 1.55
 DRIVE_LENGTH = 20 # in steps
 TURN = 3
 
+'''
+Führt einen Schuss aus.
 
+Horcht auf "/soccer/kick/run" und "/soccer/goalPosition"
+'''
 class NodeKick(object):
 
 

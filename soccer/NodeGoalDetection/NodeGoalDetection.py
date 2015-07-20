@@ -22,7 +22,20 @@ from soccer.NodeBallDetection.detectBlob import DetectBlob
 from soccer.NodeBallDetection.HSVGui import HSVGui
 from soccer.messages.GoalDetectionMessage import GoalDetectionMessage
 
+'''
+Torerkennung.
+Im GUI die _gegnerische_ Torfarbe einstellen und speichern.
 
+Schläft nach Erkennung ein und wacht bei True auf Topic 
+"/soccer/goaldetection/run" auf und erkennt auf self.msgMaxCount = 5 
+Bildern das gegnerische Tor.
+
+Sendet GoalDetectionMessage nach Erkennung und schläft wieder.
+
+CMDLINE:
+-c    Für Kalibrierung, unterbindet einschlafen nach erkennung (Nur zur 
+Kalibrierung verwenden!)
+'''
 class NodeGoalDetection(object):
   
   def __init__(self, nthframe=1, normalize=False, calibrate=False, name="NodeGoalDetection"):

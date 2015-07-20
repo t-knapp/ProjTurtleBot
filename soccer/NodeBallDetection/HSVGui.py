@@ -4,6 +4,14 @@ from FilterOption import *
 import numpy as np
 import json
 
+
+'''
+GUI Klasse für HSV Farbwerte
+
+Callbacks für Farbwerte / Filter / ButtonEvents / CheckButtons beachten! 
+
+läd und speichert Werte in JSON Datei (CTor param json=)
+'''
 class InputWindow():
     def __init__(self, parent):
         top = self.top = Toplevel(parent)
