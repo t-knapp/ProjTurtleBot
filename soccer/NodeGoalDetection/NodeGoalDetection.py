@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 # Add root directory to path to enable imports ... Python sucks.
 import sys
 sys.path.append('../../')

@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import json
 
 ''' Messages Send as Python from the BallDetection Node to all

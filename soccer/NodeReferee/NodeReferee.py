@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 import rospy
 import select, socket 
 from std_msgs.msg import Bool

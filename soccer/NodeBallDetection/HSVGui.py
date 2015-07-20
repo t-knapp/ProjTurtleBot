@@ -1,3 +1,6 @@
+# -*- coding: utf-8 -*-
+
+
 from Tkinter import *
 from threading import Thread
 from FilterOption import *
