@@ -37,10 +37,11 @@ class NodeCollisionDetection(object):
         rospy.Subscriber('soccer/referee', Bool, self.refereeHandler)
 
 
-        rospy.Subscriber('/mobile_base/events/wheel_drop', WheelDropEvent, self.wheel_drop_callback)
+#rospy.Subscriber('/mobile_base/events/wheel_drop', WheelDropEvent, self.wheel_drop_callback)
 
         # Publisher to movement
         self.move = rospy.Publisher('cmd_vel_mux/input/navi', Twist, queue_size=10)
+        self.coll = rospy.Publisher('soccer/collision', Bool, queue_size=1)
         
         self.lock = threading.Lock()
         self.noCollision = True
@@ -61,12 +62,15 @@ class NodeCollisionDetection(object):
     def refereeHandler(self,data):
         print data
         self.run = data.data
+        self.coll.publish(data.data)
 
     def collisionHandler(self, msg):
         self.lock.acquire()
+
         if self.noCollision:
             self.noCollision = False
             if msg.state != BumperEvent.PRESSED and self.run:
+                self.coll.publish(True)
                 self.unsubscribe()
                 t = Twist()
                 t.linear.x = -self.LINEAR_SPEED
@@ -79,6 +83,7 @@ class NodeCollisionDetection(object):
                     self.move.publish(t)
                     time.sleep(0.1)
                 self.subscribe()
+                self.coll.publish(False)
             self.noCollision = True
             self.lock.release()
 

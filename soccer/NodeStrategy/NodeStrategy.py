@@ -22,7 +22,7 @@ SEARCH = 1
 LOST_BALL = 2
 DRIVE = 10
 KICK = 20
-
+COLLISION = 40
 
 class NodeStrategy(object):
     
@@ -34,6 +34,7 @@ class NodeStrategy(object):
         rospy.Subscriber("/soccer/lostBall", String, self.lostBallCallback, queue_size=1)
         rospy.Subscriber("/soccer/balljourney/finished", Bool, self.journeyFinished, queue_size=1)
         rospy.Subscriber("/soccer/kick/finished", Bool, self.kickFinishedCallback, queue_size=1)
+        rospy.Subscriber("/soccer/collision", Bool, self.collisionCallback, queue_size=1)
 
         # Publisher to BodeBallJourney
         self.journey = rospy.Publisher("/soccer/balljourney/run", Bool, queue_size=1)
@@ -86,6 +87,15 @@ class NodeStrategy(object):
         self.pubGoalDetection.publish(False)
         self.pubKick.publish(False)
         self.setState(LOST_BALL)
+        
+    def collisionCallback(self, msg):
+        if(msg.data):
+            self.pubGoalDetection.publish(False)
+            self.pubKick.publish(False)
+            self.journey.publish(False)
+            self.setState(COLLISION)
+        else:
+            self.setState(LOST_BALL)
 
 ################################################################################
 # debug stuff
@@ -104,6 +114,9 @@ class NodeStrategy(object):
             return "DRIVE"
         if state == 20:
             return "KICK"
+        if state == 40:
+            return "COLLISION"
+        return str(state)
 
 if __name__ == '__main__':
 
